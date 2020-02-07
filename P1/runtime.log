@@ -1,0 +1,607 @@
+30-01-2020 15:11:36 : Preferences Dumped!...
+30-01-2020 15:13:56 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 15:13:56 : Preferences Loaded..!
+30-01-2020 15:13:57 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 15:13:57 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 15:13:57 : Preferences Dumped!...
+30-01-2020 15:38:20 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 15:38:20 : Preferences Loaded..!
+30-01-2020 15:38:24 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 15:38:24 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 15:38:24 : Preferences Dumped!...
+30-01-2020 15:41:25 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 15:41:25 : Preferences Loaded..!
+30-01-2020 15:41:29 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 15:41:29 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 15:41:29 : Preferences Dumped!...
+30-01-2020 18:08:33 : 
+
+
+
+30-01-2020 18:08:33 : ------------------------------------------------------------------------
+30-01-2020 18:09:37 : 
+
+
+
+30-01-2020 18:09:37 : ------------------------------------------------------------------------
+30-01-2020 18:11:03 : 
+
+
+
+30-01-2020 18:11:03 : ------------------------------------------------------------------------
+30-01-2020 18:12:37 : 
+
+
+
+30-01-2020 18:12:37 : ------------------------------------------------------------------------
+30-01-2020 18:12:38 : New Debugging Session
+30-01-2020 18:12:42 : 
+
+
+
+30-01-2020 18:12:42 : ------------------------------------------------------------------------
+30-01-2020 18:13:03 : Inside DBFile Create, preference file path after replacing extension/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:13:03 : File path before calling LoadPreference /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:13:03 : Preferences Loaded..!
+30-01-2020 18:13:17 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:13:17 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:13:17 : Preferences Dumped!...
+30-01-2020 18:14:59 : 
+
+
+
+30-01-2020 18:14:59 : New Debugging Session
+30-01-2020 18:14:59 : ------------------------------------------------------------------------
+30-01-2020 18:15:10 : 
+
+
+
+30-01-2020 18:15:10 : ------------------------------------------------------------------------
+30-01-2020 18:15:12 : Inside DBFile Create, preference file path after replacing extension
+30-01-2020 18:15:12 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:15:12 : File path before calling LoadPreference /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:15:12 : Preferences Loaded..!
+30-01-2020 18:15:43 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:15:43 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:15:43 : Preferences Dumped!...
+30-01-2020 18:16:27 : 
+
+
+
+30-01-2020 18:16:28 : New Debugging Session
+30-01-2020 18:16:29 : ------------------------------------------------------------------------
+30-01-2020 18:16:33 : 
+
+
+
+30-01-2020 18:16:33 : ------------------------------------------------------------------------
+30-01-2020 18:16:38 : Preferences Loaded..!
+30-01-2020 18:17:11 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 18:17:11 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 18:17:11 : Preferences Dumped!...
+30-01-2020 18:17:11 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 18:17:11 : Preferences Loaded..!
+30-01-2020 18:17:11 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 18:17:11 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 18:17:11 : Preferences Dumped!...
+30-01-2020 18:17:14 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 18:17:14 : Preferences Loaded..!
+30-01-2020 18:17:14 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 18:17:14 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 18:17:14 : Preferences Dumped!...
+30-01-2020 18:19:56 : 
+
+
+
+30-01-2020 18:19:57 : New Debugging Session
+30-01-2020 18:19:58 : ------------------------------------------------------------------------
+30-01-2020 18:20:07 : 
+
+
+
+30-01-2020 18:20:07 : ------------------------------------------------------------------------
+30-01-2020 18:25:34 : 
+
+
+
+30-01-2020 18:25:34 : New Debugging Session
+30-01-2020 18:25:34 : ------------------------------------------------------------------------
+30-01-2020 18:25:42 : 
+
+
+
+30-01-2020 18:25:42 : ------------------------------------------------------------------------
+30-01-2020 18:26:06 : Inside DBFile Create, preference file path after replacing extension
+30-01-2020 18:26:06 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:26:06 : File path before calling LoadPreference 
+30-01-2020 18:26:06 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:26:06 : Preferences Loaded..!
+30-01-2020 18:26:22 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:26:22 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:26:22 : Preferences Dumped!...
+30-01-2020 18:26:58 : 
+
+
+
+30-01-2020 18:26:59 : New Debugging Session
+30-01-2020 18:27:01 : ------------------------------------------------------------------------
+30-01-2020 18:27:08 : Inside DBFile Open, preference file path after replacing extension
+30-01-2020 18:27:08 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:27:08 : File path before calling LoadPreference 
+30-01-2020 18:27:08 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:27:08 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:27:08 : Preferences Loaded..!
+30-01-2020 18:28:10 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:28:10 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:28:10 : Preferences Dumped!...
+30-01-2020 18:28:14 : Inside DBFile Open, preference file path after replacing extension
+30-01-2020 18:28:14 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:28:14 : File path before calling LoadPreference 
+30-01-2020 18:28:14 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:28:14 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:28:14 : Preferences Loaded..!
+30-01-2020 18:28:18 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:28:18 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:28:18 : Preferences Dumped!...
+30-01-2020 18:28:19 : Inside DBFile Open, preference file path after replacing extension
+30-01-2020 18:28:19 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:28:19 : File path before calling LoadPreference 
+30-01-2020 18:28:19 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:28:19 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:28:19 : Preferences Loaded..!
+30-01-2020 18:28:31 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:28:31 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+30-01-2020 18:28:31 : Preferences Dumped!...
+30-01-2020 18:30:23 : 
+
+
+
+30-01-2020 18:30:23 : New Debugging Session
+30-01-2020 18:30:23 : ------------------------------------------------------------------------
+30-01-2020 18:30:32 : Inside DBFile Create, preference file path after replacing extension
+30-01-2020 18:30:32 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 18:30:32 : File path before calling LoadPreference 
+30-01-2020 18:30:32 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 18:30:32 : Preferences Loaded..!
+30-01-2020 18:30:44 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 18:30:44 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+30-01-2020 18:30:44 : Preferences Dumped!...
+
+
+30-01-2020 18:31:52 : 
+
+
+
+
+
+
+30-01-2020 18:31:52 : New Debugging Session
+
+
+
+30-01-2020 18:31:52 : ------------------------------------------------------------------------
+
+
+
+30-01-2020 18:32:02 : Inside DBFile Create, preference file path after replacing extension
+
+
+
+30-01-2020 18:32:02 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:32:02 : File path before calling LoadPreference 
+
+
+
+30-01-2020 18:32:02 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:32:02 : Preferences Loaded..!
+
+
+
+30-01-2020 18:33:07 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:33:07 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:33:07 : Preferences Dumped!...
+
+
+
+30-01-2020 18:33:48 : 
+
+
+
+
+
+
+30-01-2020 18:33:48 : New Debugging Session
+
+
+
+30-01-2020 18:33:48 : ------------------------------------------------------------------------
+
+
+
+30-01-2020 18:33:53 : Inside DBFile Open, preference file path after replacing extension
+
+
+
+30-01-2020 18:33:53 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:33:53 : File path before calling LoadPreference 
+
+
+
+30-01-2020 18:33:53 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:33:53 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:33:53 : Preferences Loaded..!
+
+
+
+30-01-2020 18:34:37 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:34:37 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:34:37 : Preferences Dumped!...
+
+
+
+30-01-2020 18:34:37 : Inside DBFile Open, preference file path after replacing extension
+
+
+
+30-01-2020 18:34:37 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:34:37 : File path before calling LoadPreference 
+
+
+
+30-01-2020 18:34:37 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:34:37 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:34:37 : Preferences Loaded..!
+
+
+
+30-01-2020 18:34:37 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:34:37 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:34:37 : Preferences Dumped!...
+
+
+
+30-01-2020 18:34:38 : Inside DBFile Open, preference file path after replacing extension
+
+
+
+30-01-2020 18:34:38 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:34:38 : File path before calling LoadPreference 
+
+
+
+30-01-2020 18:34:38 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:34:38 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:34:38 : Preferences Loaded..!
+
+
+
+30-01-2020 18:34:38 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:34:38 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+
+
+30-01-2020 18:34:38 : Preferences Dumped!...
+
+
+30-01-2020 18:39:56 : 
+
+
+
+
+30-01-2020 18:39:56 : New Debugging Session
+
+30-01-2020 18:39:56 : ------------------------------------------------------------------------
+
+30-01-2020 18:40:01 : Inside DBFile Create, preference file path after replacing extension
+
+30-01-2020 18:40:01 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+
+30-01-2020 18:40:01 : File path before calling LoadPreference 
+
+30-01-2020 18:40:01 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+
+30-01-2020 18:40:01 : Preferences Loaded..!
+
+30-01-2020 18:42:10 : 
+
+
+
+
+30-01-2020 18:42:10 : New Debugging Session
+
+30-01-2020 18:42:10 : ------------------------------------------------------------------------
+
+30-01-2020 18:42:33 : Inside DBFile Create, preference file path after replacing extension
+
+30-01-2020 18:42:35 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+
+30-01-2020 18:42:48 : File path before calling LoadPreference 
+
+30-01-2020 18:42:50 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+
+30-01-2020 18:43:57 : Preferences Loaded..!
+
+30-01-2020 18:46:50 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+
+30-01-2020 18:46:50 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/nation.pref
+
+30-01-2020 18:46:50 : Preferences Dumped!...
+
+30-01-2020 18:49:04 : 
+
+
+
+
+30-01-2020 18:49:05 : New Debugging Session
+
+30-01-2020 18:49:05 : ------------------------------------------------------------------------
+
+30-01-2020 18:49:12 : Inside DBFile Create, preference file path after replacing extension
+
+30-01-2020 18:49:12 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 18:49:12 : File path before calling LoadPreference 
+
+30-01-2020 18:49:12 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 18:49:12 : Preferences Loaded..!
+
+30-01-2020 18:51:44 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 18:51:44 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 18:51:44 : Preferences Dumped!...
+
+30-01-2020 18:53:53 : 
+
+
+
+
+30-01-2020 18:53:54 : New Debugging Session
+
+30-01-2020 18:53:54 : ------------------------------------------------------------------------
+
+30-01-2020 18:54:18 : Inside DBFile Open, preference file path after replacing extension
+
+30-01-2020 18:54:18 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 18:54:18 : Opening binary file using path :
+
+30-01-2020 18:54:18 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.bin
+
+30-01-2020 18:54:18 : File path before calling LoadPreference 
+
+30-01-2020 18:54:18 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 18:54:18 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 18:54:18 : Preferences Loaded..!
+
+30-01-2020 19:08:13 : 
+
+
+
+
+30-01-2020 19:08:13 : New Debugging Session
+
+30-01-2020 19:08:13 : ------------------------------------------------------------------------
+
+30-01-2020 19:08:16 : Inside DBFile Open, preference file path after replacing extension
+
+30-01-2020 19:08:16 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:08:16 : Opening binary file using path :
+
+30-01-2020 19:08:16 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.bin
+
+30-01-2020 19:08:16 : File path before calling LoadPreference 
+
+30-01-2020 19:08:16 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:08:16 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:08:16 : Preferences Loaded..!
+
+30-01-2020 19:09:18 : 
+
+
+
+
+30-01-2020 19:09:18 : New Debugging Session
+
+30-01-2020 19:09:18 : ------------------------------------------------------------------------
+
+30-01-2020 19:09:21 : Inside DBFile Open, preference file path after replacing extension
+
+30-01-2020 19:09:21 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:09:21 : Opening binary file using path :
+
+30-01-2020 19:09:21 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.bin
+
+30-01-2020 19:09:21 : File path before calling LoadPreference 
+
+30-01-2020 19:09:21 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:09:21 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:09:21 : Preferences Loaded..!
+
+30-01-2020 19:09:30 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:09:30 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:09:30 : Preferences Dumped!...
+
+30-01-2020 19:09:33 : Inside DBFile Open, preference file path after replacing extension
+
+30-01-2020 19:09:33 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:09:33 : Opening binary file using path :
+
+30-01-2020 19:09:33 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.bin
+
+30-01-2020 19:09:33 : File path before calling LoadPreference 
+
+30-01-2020 19:09:33 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:09:33 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:09:33 : Preferences Loaded..!
+
+30-01-2020 19:09:39 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:09:39 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:09:39 : Preferences Dumped!...
+
+30-01-2020 19:09:43 : Inside DBFile Open, preference file path after replacing extension
+
+30-01-2020 19:09:43 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:09:43 : Opening binary file using path :
+
+30-01-2020 19:09:43 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.bin
+
+30-01-2020 19:09:43 : File path before calling LoadPreference 
+
+30-01-2020 19:09:43 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:09:43 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:09:43 : Preferences Loaded..!
+
+30-01-2020 19:10:02 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:10:02 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:10:02 : Preferences Dumped!...
+
+30-01-2020 19:11:37 : 
+
+
+
+
+30-01-2020 19:11:37 : New Debugging Session
+
+30-01-2020 19:11:37 : ------------------------------------------------------------------------
+
+30-01-2020 19:11:37 : Inside DBFile Open, preference file path after replacing extension
+
+30-01-2020 19:11:37 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:11:37 : Opening binary file using path :
+
+30-01-2020 19:11:37 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.bin
+
+30-01-2020 19:11:37 : File path before calling LoadPreference 
+
+30-01-2020 19:11:37 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:11:37 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:11:37 : Preferences Loaded..!
+
+30-01-2020 19:11:37 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:11:37 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:11:37 : Preferences Dumped!...
+
+30-01-2020 19:11:37 : Inside DBFile Open, preference file path after replacing extension
+
+30-01-2020 19:11:37 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:11:37 : Opening binary file using path :
+
+30-01-2020 19:11:37 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.bin
+
+30-01-2020 19:11:37 : File path before calling LoadPreference 
+
+30-01-2020 19:11:37 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:11:37 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:11:37 : Preferences Loaded..!
+
+30-01-2020 19:11:37 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:11:37 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:11:37 : Preferences Dumped!...
+
+30-01-2020 19:11:37 : Inside DBFile Open, preference file path after replacing extension
+
+30-01-2020 19:11:37 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:11:37 : Opening binary file using path :
+
+30-01-2020 19:11:37 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.bin
+
+30-01-2020 19:11:37 : File path before calling LoadPreference 
+
+30-01-2020 19:11:37 : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:11:37 : Opening preference file located at : /home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:11:37 : Preferences Loaded..!
+
+30-01-2020 19:11:37 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:11:37 : Dumping preferences at :/home/mk/Documents/uf docs/sem 2/Database Implementation/DBI/dbfiles/region.pref
+
+30-01-2020 19:11:37 : Preferences Dumped!...
