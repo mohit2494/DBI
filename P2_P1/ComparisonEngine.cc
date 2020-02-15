@@ -10,12 +10,13 @@
 // returns a -1, 0, or 1 depending upon whether left is less then, equal to, or greater
 // than right, depending upon the OrderMaker
 int ComparisonEngine :: Compare(Record *left, Record *right, OrderMaker *orderUs) {
-
 	char *val1, *val2;
-
+    
 	char *left_bits = left->GetBits();
 	char *right_bits = right->GetBits();
-
+    Schema s ("catalog","nation");
+//    left->Print(&s);
+//    right->Print(&s);
 	for (int i = 0; i < orderUs->numAtts; i++) {
 		val1 = left_bits + ((int *) left_bits)[orderUs->whichAtts[i] + 1];
 		val2 = right_bits + ((int *) right_bits)[orderUs->whichAtts[i] + 1];

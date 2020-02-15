@@ -1,68 +1,84 @@
 #include "BigQ.h"
+#include "Utilities.h"
 using namespace std;
+
 // ------------------------------------------------------------------
 void* BigQ :: Driver(void *p){
-    BigQ * ptr = (BigQ*) p;
-    //    ptr->Phase1();
-    ptr->Phase2();
-    
+  BigQ * ptr = (BigQ*) p;
+  ptr->Phase1();
+  ptr->Phase2();
+
 }
 void BigQ :: Phase1()
 {
-    
     Record tRec;
-    Page *tPage = new Page();                                           // for allocating memory to page
-    Run tRun(this->myThreadData.runlen,this->myThreadData.sortorder);   // intializing run
+    Run tRun(this->myThreadData.runlen,this->myThreadData.sortorder);
     
+    // add 1 page for adding records
+    long long int pageCount=0;
+    long long int runCount=1;
+    tRun.AddPage();
+
     // read data from in pipe sort them into runlen pages
     while(this->myThreadData.in->Remove(&tRec)) {
-        if(!tPage->Append(&tRec)) {
+        if(!tRun.addRecordAtPage(pageCount, &tRec)) {
             if (tRun.checkRunFull()) {
                 tRun.sortRunInternalPages();
-                myTree = new TournamentTree(&tRun,this->myThreadData.sortorder);
-                tRun.clearPages();
+                sortCompleteRun(&tRun);
+                tRun.writeRunToFile(&this->myFile);
+                tRun.clearPages();pageCount=-1;runCount++;
             }
-            tRun.AddPage(tPage);
-            delete tPage;
-            tPage = new Page();
-            tPage->Append(&tRec);
+            tRun.AddPage();pageCount++;
+            tRun.addRecordAtPage(pageCount, &tRec);
         }
     }
-    if(tPage->getNumRecs()>0) {
-        if (tRun.checkRunFull()) {
-            tRun.sortRunInternalPages();
-            tRun.clearPages();
-        }
-        tRun.AddPage(tPage);
+    if(tRun.getRunSize()!=0) {
         tRun.sortRunInternalPages();
-        delete tPage; // delete pointer
-    }
-    else if(tRun.getRunSize()!=0) {
-        tRun.sortRunInternalPages();
+        sortCompleteRun(&tRun);
+        tRun.writeRunToFile(&this->myFile);
         tRun.clearPages();
     }
+    this->f_path = "dbfiles/temp.bin";
+    this->totalRuns = runCount;
 }
 
 // sort runs from file using Run Manager
 void BigQ :: Phase2()
-{   
-    int noOfRuns = 2;
-    int runLength = 2;
-    int totalPages = 3;
-    char * f_path = "../../dbfiles/part.bin";
-    RunManager runManager(noOfRuns,runLength,totalPages,f_path);
+{
+    RunManager runManager(this->totalRuns,this->myThreadData.runlen,this->f_path);
     myTree = new TournamentTree(&runManager,this->myThreadData.sortorder);
     Page * tempPage;
     while(myTree->GetSortedPage(&tempPage)){
         Record tempRecord;
         while(tempPage->GetFirst(&tempRecord)){
-            Schema s("catalog","part");
-            tempRecord.Print(&s);
+        //    Schema s("catalog","part");
+        //    tempRecord.Print(&s);
             this->myThreadData.out->Insert(&tempRecord);
         }
         myTree->RefillOutputBuffer();
     }
-    
+}
+
+void BigQ::sortCompleteRun(Run *run) {
+    myTree = new TournamentTree(run,this->myThreadData.sortorder);
+    Page * tempPage;
+    // as run was swapped by tournament tree
+    // we need to allocate space for pages again
+    // these pages will be part of complete sorted run
+    // add 1 page for adding records
+    while(myTree->GetSortedPage(&tempPage)){
+        cout<<tempPage->getNumRecs();
+        Record tempRecord;
+        Page * pushPage = new Page();
+        while(tempPage->GetFirst(&tempRecord)){
+            //    Schema s("catalog","part");
+            //    tempRecord.Print(&s);
+            pushPage->Append(&tempRecord);
+        }
+        run->AddPage(pushPage);
+        myTree->RefillOutputBuffer();
+    }
+    delete myTree;myTree=NULL;
 }
 
 // constructor
@@ -71,6 +87,7 @@ BigQ :: BigQ (Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
     myThreadData.out = &out;
     myThreadData.sortorder = &sortorder;
     myThreadData.runlen = runlen;
+    myTree=NULL;f_path=NULL;
     pthread_create(&myThread, NULL, BigQ::Driver,this);
     pthread_join(myThread, NULL);
     out.ShutDown ();
@@ -81,20 +98,17 @@ BigQ::~BigQ () {
 }
 // ------------------------------------------------------------------
 
-
 // ------------------------------------------------------------------
-struct recordComparator {
-    bool operator() (int i,int j) { return (i<j);}
-} myobject;
-
 Run::Run(int runlen) {
     this->runLength = runlen;
     this->sortorder = NULL;
 }
-
 Run::Run(int runlen,OrderMaker * sortorder) {
     this->runLength = runlen;
     this->sortorder = sortorder;
+}
+void Run::AddPage() {
+    this->pages.push_back(new Page());
 }
 void Run::AddPage(Page *p) {
     this->pages.push_back(p);
@@ -108,7 +122,7 @@ vector<Page*> Run::getPages() {
     return this->pages;
 }
 void Run::getPages(vector<Page*> * myPageVector) {
-    // myPageVector->swap(this->pages);
+    myPageVector->swap(this->pages);
 }
 bool Run::checkRunFull() {
     return this->pages.size() == this->runLength;
@@ -119,7 +133,6 @@ bool Run::clearPages() {
 int Run::getRunSize() {
     return this->pages.size();
 }
-
 void Run::sortSinglePage(Page *p) {
     if (sortorder){
         vector<Record*> records;
@@ -131,31 +144,50 @@ void Run::sortSinglePage(Page *p) {
         sort(records.begin(), records.end(), CustomComparator(this->sortorder));
         for(int i=0; i<records.size();i++) {
             Record *t = records.at(i);
-            t->Print(new Schema("catalog","part"));
+            // t->Print(new Schema("catalog","part"));
             p->Append(t);
         }
     }
 }
-// ------------------------------------------------------------------
+int Run::addRecordAtPage(long long int pageCount, Record *rec) {
+    return this->pages.at(pageCount)->Append(rec);
+}
+bool Run::writeRunToFile(DBFile *file) {
+    //TODO::change second parameter to sorted
+    //TODO::handle create for this
+    if(!Utilities::checkfileExist("dbfiles/temp.bin")) {
+        file->Create("dbfiles/temp.bin",heap,NULL);
+    }
+    else{
+        file->Open("dbfiles/temp.bin");
 
+    }
+    for(int i=0;i<this->pages.size();i++) {
+        Record temp;
+        while(pages.at(i)->GetFirst(&temp)) {
+            file->Add(temp);
+        }
+    }
+    file->Close();
+}
+// ------------------------------------------------------------------
 
 // ------------------------------------------------------------------
 TournamentTree :: TournamentTree(Run * run,OrderMaker * sortorder){
     myOrderMaker = sortorder;
-    if (myQueue){
+    if (myQueue != NULL){
         delete myQueue;
     }
     myQueue = new priority_queue<QueueObject,vector<QueueObject>,CustomComparator>(CustomComparator(sortorder));
     isRunManagerAvailable = false;
     run->getPages(&myPageVector);
     Inititate();
-    
 }
 
 TournamentTree :: TournamentTree(RunManager * manager,OrderMaker * sortorder){
     myOrderMaker = sortorder;
     myRunManager = manager;
-    if (myQueue == NULL){
+    if (myQueue != NULL){
         delete myQueue;
     }
     myQueue = new priority_queue<QueueObject,vector<QueueObject>,CustomComparator>(CustomComparator(sortorder));
@@ -164,7 +196,7 @@ TournamentTree :: TournamentTree(RunManager * manager,OrderMaker * sortorder){
     Inititate();
 }
 void TournamentTree :: Inititate(){
-    Schema s("catalog","part");
+    // Schema s("catalog","part");
     if (!myPageVector.empty()){
         int runId = 0;
         for(vector<Page*>::iterator i = myPageVector.begin() ; i!=myPageVector.end() ; ++i){
@@ -186,7 +218,7 @@ void TournamentTree :: Inititate(){
             myQueue->pop();
             Page * topPage = myPageVector.at(topObject.runId);
             if (!(topPage->GetFirst(topObject.record))){
-                if (myRunManager->getNextPageOfRun(topPage,topObject.runId)){
+                if (isRunManagerAvailable&&myRunManager->getNextPageOfRun(topPage,topObject.runId)){
                     if(topPage->GetFirst(topObject.record)){
                         myQueue->push(topObject);
                     }
@@ -195,14 +227,13 @@ void TournamentTree :: Inititate(){
             else{
                 myQueue->push(topObject);
             }
-
         }
-        
+
     }
 }
 
 void TournamentTree :: RefillOutputBuffer(){
-    Schema s("catalog","part");
+    // Schema s("catalog","part");
     if (!myPageVector.empty()){
         int runId = 0;
         while(!myQueue->empty()){
@@ -215,7 +246,7 @@ void TournamentTree :: RefillOutputBuffer(){
 
             Page * topPage = myPageVector.at(topObject.runId);
             if (!(topPage->GetFirst(topObject.record))){
-                if (myRunManager->getNextPageOfRun(topPage,topObject.runId)){
+                if (isRunManagerAvailable&&myRunManager->getNextPageOfRun(topPage,topObject.runId)){
                     if(topPage->GetFirst(topObject.record)){
 //                        topObject.record->Print(&s);
 //                        cout<<topObject.runId;
@@ -246,12 +277,13 @@ bool TournamentTree :: GetSortedPage(Page ** page){
 
 
 // ------------------------------------------------------------------
-RunManager :: RunManager(int noOfRuns,int runLength,int totalPages,char * f_path){
+RunManager :: RunManager(int noOfRuns,int runLength,char * f_path){
     this->noOfRuns = noOfRuns;
     this->runLength = runLength;
-    this->totalPages = totalPages;
     this->f_path = f_path;
     this->file.Open(1,this->f_path);
+    int totalPages = file.GetLength()-1;
+    this->totalPages = totalPages;
     int pageOffset = 0;
     for(int i = 0; i<noOfRuns;i++){
         RunFileObject fileObject;
@@ -260,15 +292,16 @@ RunManager :: RunManager(int noOfRuns,int runLength,int totalPages,char * f_path
         fileObject.currentPage = fileObject.startPage;
         pageOffset+=runLength;
         if (pageOffset <=totalPages){
-            fileObject.endPage = pageOffset;
+            fileObject.endPage = pageOffset-1;
         }
         else{
             fileObject.endPage =  fileObject.startPage + (totalPages-fileObject.startPage-1);
         }
         runLocation.insert(make_pair(i,fileObject));
     }
-    
+
 }
+
 
 void  RunManager:: getPages(vector<Page*> * myPageVector){
     for(int i = 0; i< noOfRuns ; i++){
@@ -291,7 +324,7 @@ bool RunManager :: getNextPageOfRun(Page * page,int runNo){
         cout<<runGetter->second.currentPage<<runGetter->second.endPage;
         this->file.GetPage(page,runGetter->second.currentPage);
         runGetter->second.currentPage+=1;
-        if(runGetter->second.currentPage>=runGetter->second.endPage){
+        if(runGetter->second.currentPage>runGetter->second.endPage){
             runLocation.erase(runNo);
         }
         return true;
@@ -314,390 +347,5 @@ bool CustomComparator :: operator ()( Record* lhs,  Record* rhs){
     int val = myComparisonEngine.Compare(lhs,rhs,myOrderMaker);
     return (val <=0)? true : false;
 }
-
-
 // ------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//day 2
-
-
-//#include "BigQ.h"
-//
-//using namespace std;
-//
-//// ------------------------------------------------------------------
-//void* BigQ :: Driver(void *p){
-//  BigQ * ptr = (BigQ*) p;
-//  ptr->Phase1();
-//  ptr->Phase2();
-//
-//}
-//void BigQ :: Phase1()
-//{
-//    Record tRec;
-//    Page tPage;
-//    Run tRun(this->myThreadData.runlen,this->myThreadData.sortorder);
-//
-//    // read data from in pipe sort them into runlen pages
-//    while(this->myThreadData.in->Remove(&tRec)) {
-//        if(!tPage.Append(&tRec)) {
-//            if (tRun.checkRunFull()) {
-//                tRun.sortRunInternalPages();
-//                myTree = new TournamentTree(&tRun,this->myThreadData.sortorder);
-//                tRun.clearPages();
-//            }
-//            tRun.AddPage(tPage);
-//            tPage.EmptyItOut();
-//            tPage.Append(&tRec);
-//        }
-//    }
-//
-//    if(tPage.getNumRecs()>0) {
-//        if (tRun.checkRunFull()) {
-//            tRun.sortRunInternalPages();
-//            tRun.clearPages();
-//        }
-//
-//        tRun.AddPage(tPage);
-//        tRun.sortRunInternalPages();
-//        // TODO:: write run to file
-//        tPage.EmptyItOut();
-//    }
-//    else if(tRun.getRunSize()!=0) {
-//        tRun.sortRunInternalPages();
-//        // TODO:: write run to file
-//        tRun.clearPages();
-//    }
-//    delete myTree;
-//    myTree = NULL;
-//}
-//
-//// sort runs from file using Run Manager
-//void BigQ :: Phase2()
-//{
-//    RunManger runManager(totalRuns,this->myThreadData.runlen,&myFile);
-//    myTree = new TournamentTree(&runManager,this->myThreadData.sortorder);
-//    Page tempPage
-//    while(myTree.GetSortedPage(tempPage)){
-//        Record tempRecord;
-//        while(tempPage.GetFirst(&tempRecord)){
-//            this->myThreadData.out->Insert(&tempRecord);
-//        }
-//    }
-//}
-//
-//// constructor
-//BigQ :: BigQ (Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
-//    myThreadData.in = &in;
-//    myThreadData.out = &out;
-//    myThreadData.sortorder = &sortorder;
-//    myThreadData.runlen = runlen;
-//    pthread_create(&myThread, NULL, BigQ::Driver,this);
-//    out.ShutDown ();
-//}
-//
-//// destructor
-//BigQ::~BigQ () {
-//    pthread_join(myThread,NULL);
-//}
-//// ------------------------------------------------------------------
-//
-//
-//// ------------------------------------------------------------------
-//struct recordComparator {
-//  bool operator() (int i,int j) { return (i<j);}
-//} myobject;
-//
-//Run::Run(int runlen) {
-//    this->runLength = runlen;
-//    this->sortorder = NULL;
-//}
-//
-//Run::Run(int runlen,OrderMaker * sortorder) {
-//    this->runLength = runlen;
-//    this->sortorder = sortorder;
-//}
-//void Run::AddPage(Page &p) {
-//    cout<<"herer";
-//    this->pages.push_back(p);
-//}
-//void Run::sortRunInternalPages() {
-//    for(int i=0; i < pages.size(); i++) {
-//        this->sortSinglePage(pages.at(i));
-//    }
-//}
-//vector<Page> Run::getPages() {
-//    return this->pages;
-//}
-//void Run::getPages(vector<Page> * myPageVector) {
-//    myPageVector->swap(this->pages);
-//}
-//bool Run::checkRunFull() {
-//    return this->pages.size() == this->runLength;
-//}
-//bool Run::clearPages() {
-//    this->pages.clear();
-//}
-//int Run::getRunSize() {
-//    return this->pages.size();
-//}
-//
-//Page Run::sortSinglePage(Page p) {
-//    if (sortorder){
-//        vector<Record> records;
-//        Record temp;
-//        while(p.getNumRecs()>0) {
-//            p.GetFirst(&temp);
-//            records.push_back(temp);
-//        }
-//        sort(records.begin(), records.end(), CustomComparator(this->sortorder));
-//    }
-//}
-//
-//// ------------------------------------------------------------------
-//
-//
-//
-//// ------------------------------------------------------------------
-//TournamentTree :: TournamentTree(Run * run,OrderMaker * sortorder){
-//    myOrderMaker = sortorder;
-//    myQueue = new priority_queue<Record,vector<Record>,CustomComparator>(CustomComparator(sortorder));
-//    isRunManagerAvailable = false;
-//    run->getPages(&myPageVector);
-//    Inititate();
-//
-//}
-//
-//TournamentTree :: TournamentTree(RunManager * manager,OrderMaker * sortorder){
-//    myOrderMaker = sortorder;
-//    myRunManager = manager;
-//    myQueue = new priority_queue<Record,vector<Record>,CustomComparator>(CustomComparator(sortorder));
-//    isRunManagerAvailable = true;
-//    myRunManager->getPages(&myPageVector);
-//    Inititate();
-//}
-//void TournamentTree :: Inititate(){
-//    if (!myPageVector.empty()){
-//        int flag = 1;
-//        while(flag) {
-//            for(vector<Page>::iterator page = myPageVector.begin() ; page!=myPageVector.end() ; ++page){
-//                Record tempRecord;
-//                if (!page->GetFirst(&tempRecord) && isRunManagerAvailable){
-//                    if (myRunManager->getNextPageOfRun(&(*page),0,0)){
-//                        myQueue->push(tempRecord);
-//                    }
-//                }
-//                else{
-//                    myQueue->push(tempRecord);
-//                }
-//            }
-//            Record r = myQueue->top();
-//            myQueue->pop();
-//
-//            if (OutputBuffer.Append(&r) || !myQueue->empty()){
-//                flag = 0;
-//            }
-//
-//        }
-//    }
-//
-//}
-//
-//bool TournamentTree :: GetSortedPage(Page &page){
-//    Record temp;
-//    bool isOutputBufferEmpty = true;
-//    while(OutputBuffer.GetFirst(&temp)){
-//        page.Append(&temp);
-//        isOutputBufferEmpty = false;
-//    }
-//    if(isOutputBufferEmpty){
-//        return 0;
-//    }
-//    return 1;
-//}
-//
-//// ------------------------------------------------------------------
-//
-//
-//RunManager :: RunManager(int noOfRuns,int runLength,DBFile * file){
-//
-//
-//
-//}
-//
-//void  RunManager:: getPages(vector<Page> * myPageVector){
-//
-//
-//};
-//bool RunManager :: getNextPageOfRun(Page * page,int runNo,int pageOffset){
-//
-//};
-//
-//
-//CustomComparator :: CustomComparator(OrderMaker * sortorder){
-//    this->myOrderMaker = sortorder;
-//}
-//bool CustomComparator :: operator ()( Record & lhs,  Record &rhs){
-//    return myComparisonEngine.Compare(&lhs,&rhs,myOrderMaker);
-//}
-//
-
-
-
-// my code startes here
-
-
-//#include "BigQ.h"
-//
-//
-//TreeComparator :: TreeComparator(OrderMaker &sortorder){
-//    myOrderMaker = &sortorder;
-//}
-//
-//
-//Run::Run(int runlen) {
-//    this->runLength = runlen;
-//}
-//void Run::AddPage(Page p) {
-//    this->pages.push_back(p);
-//}
-//void Run::sortRun() {
-//    // sort pages
-//    // insert pages into tournament
-//}
-//vector<Page> Run::getPages() {
-//    return this->pages;
-//}
-//bool Run::checkRunFull() {
-//    return this->pages.size() == this->runLength;
-//}
-//bool Run::clearPages() {
-//    this->pages.clear();
-//}
-//int Run::getRunSize() {
-//    return this->pages.size();
-//}
-//
-//TournamentTree :: TournamentTree(OrderMaker &sortorder,Run &run){
-//    myOrderMaker = &sortorder;
-//    myQueue = new priority_queue<Record,vector<Record>,TreeComparator>(TreeComparator(sortorder));
-//    isRunManagerAvailable = false;
-//    run.getPages(&myPageVector);
-//    Inititate();
-//
-//}
-//
-//TournamentTree :: TournamentTree(OrderMaker &sortorder,RunManager &manager){
-//    myOrderMaker = &sortorder;
-//    myRunManager = &manager;
-//    myQueue = new priority_queue<Record,vector<Record>,TreeComparator>(TreeComparator(sortorder));
-//    isRunManagerAvailable = true;
-//    myRunManager->getPages(&myPageVector);
-//    Inititate();
-//}
-//void TournamentTree :: Inititate(){
-//    if (!myPageVector.empty()){
-//        int flag = 1;
-//        while(flag) {
-//            for(vector<Page>::iterator page = myPageVector.begin() ; page!=myPageVector.end() ; ++page){
-//                Record tempRecord;
-//                if (!page->GetFirst(&tempRecord) && isRunManagerAvailable){
-//                    if (myRunManager->getNextPage(page)){
-//                        myQueue->push(tempRecord);
-//                    }
-//                }
-//                else{
-//                    myQueue->push(tempRecord);
-//                }
-//            }
-//            Record r = myQueue->top();
-//            myQueue->pop();
-//
-//            if (OutputBuffer.Append(&r) || !myQueue->empty()){
-//                flag = 0;
-//            }
-//
-//        }
-//    }
-//
-//}
-//
-//bool TournamentTree :: GetSortedPage(Page &page){
-//    Record temp;
-//    bool isOutputBufferEmpty = true;
-//    while(OutputBuffer.GetFirst(&temp)){
-//        page.Append(&temp);
-//        isOutputBufferEmpty = false;
-//    }
-//    if(isOutputBufferEmpty){
-//        return 0;
-//    }
-//    return 1;
-//}
-//
-//void* BigQ :: Driver(void *p){
-//    BigQ * ptr = (BigQ*) p;
-//    ptr->Phase1();
-//    ptr->Phase2();
-//}
-//
-//void BigQ :: Inititate(){
-//
-//}
-//void BigQ :: Phase1()
-//{
-//
-//
-//}
-//
-//void BigQ :: Phase2()
-//{
-//    cout <<"Phase2";
-//
-//    //    Run myRun(myThreadData.runlen);
-//    //    Record readBuffer;
-//    //    DBFile tempFile;
-//    //    while(myThreadData.in->remove(&readBuffer)){
-//    //        myRun.addRecord(&readBuffer);
-//    //    }
-//    //    myRun.sort();
-//    //    tempFile.Open();
-//    //    myRun.writeSortedRecords(&DBFile);
-//    //    tempFile
-//    //
-//}
-//
-//BigQ :: BigQ (Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
-//    myThreadData.in = &in;
-//    myThreadData.out = &out;
-//    myThreadData.sortorder = &sortorder;
-//    myThreadData.runlen = runlen;
-//    myTree = new TournamentTree(sortorder,NULL);
-//    pthread_create(&myThread, NULL, BigQ::Driver,this);
-//    pthread_join(myThread,NULL);
-//    out.ShutDown ();
-//}
-//
-//BigQ::~BigQ () {
-//}
