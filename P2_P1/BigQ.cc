@@ -179,9 +179,11 @@ void TournamentTree :: Inititate(){
 
         while(!myQueue->empty()){
             QueueObject topObject = myQueue->top();
-            myQueue->pop();
             bool OutputBufferFull = !(OutputBuffer.Append(topObject.record));
-
+            if (OutputBufferFull){
+                break;
+            }
+            myQueue->pop();
             Page * topPage = myPageVector.at(topObject.runId);
             if (!(topPage->GetFirst(topObject.record))){
                 if (myRunManager->getNextPageOfRun(topPage,topObject.runId)){
@@ -192,9 +194,6 @@ void TournamentTree :: Inititate(){
             }
             else{
                 myQueue->push(topObject);
-            }
-            if (OutputBufferFull){
-                break;
             }
 
         }
@@ -208,8 +207,11 @@ void TournamentTree :: RefillOutputBuffer(){
         int runId = 0;
         while(!myQueue->empty()){
             QueueObject topObject = myQueue->top();
-            myQueue->pop();
             bool OutputBufferFull = !(OutputBuffer.Append(topObject.record));
+            if (OutputBufferFull){
+                break;
+            }
+            myQueue->pop();
 
             Page * topPage = myPageVector.at(topObject.runId);
             if (!(topPage->GetFirst(topObject.record))){
@@ -225,9 +227,6 @@ void TournamentTree :: RefillOutputBuffer(){
 //                topObject.record->Print(&s);
 //                cout<<topObject.runId;
                 myQueue->push(topObject);
-            }
-            if (OutputBufferFull){
-                break;
             }
 
         }
