@@ -3,7 +3,7 @@ using namespace std;
 // ------------------------------------------------------------------
 void* BigQ :: Driver(void *p){
     BigQ * ptr = (BigQ*) p;
-//    ptr->Phase1();
+    //    ptr->Phase1();
     ptr->Phase2();
     
 }
@@ -46,22 +46,23 @@ void BigQ :: Phase1()
 // sort runs from file using Run Manager
 void BigQ :: Phase2()
 {   
-    int noOfRuns = 10;
-    int runLength = 10;
-    int totalPages = 100;
-    char * f_path = "../../dbfiles/lineitem.bin";
+    int noOfRuns = 2;
+    int runLength = 2;
+    int totalPages = 3;
+    char * f_path = "../../dbfiles/part.bin";
     RunManager runManager(noOfRuns,runLength,totalPages,f_path);
     myTree = new TournamentTree(&runManager,this->myThreadData.sortorder);
-    Page tempPage;
-    while(myTree->GetSortedPage(tempPage)){
+    Page * tempPage;
+    while(myTree->GetSortedPage(&tempPage)){
         Record tempRecord;
-        while(tempPage.GetFirst(&tempRecord)){
-            Schema s("catalog","lineitem");
+        while(tempPage->GetFirst(&tempRecord)){
+            Schema s("catalog","part");
             tempRecord.Print(&s);
             this->myThreadData.out->Insert(&tempRecord);
         }
+        myTree->RefillOutputBuffer();
     }
-
+    
 }
 
 // constructor
@@ -130,7 +131,7 @@ void Run::sortSinglePage(Page *p) {
         sort(records.begin(), records.end(), CustomComparator(this->sortorder));
         for(int i=0; i<records.size();i++) {
             Record *t = records.at(i);
-            t->Print(new Schema("catalog","nation"));
+            t->Print(new Schema("catalog","part"));
             p->Append(t);
         }
     }
@@ -142,9 +143,9 @@ void Run::sortSinglePage(Page *p) {
 TournamentTree :: TournamentTree(Run * run,OrderMaker * sortorder){
     myOrderMaker = sortorder;
     if (myQueue){
-           delete myQueue;
+        delete myQueue;
     }
-    myQueue = new priority_queue<Record*,vector<Record*>,CustomComparator>(CustomComparator(sortorder));
+    myQueue = new priority_queue<QueueObject,vector<QueueObject>,CustomComparator>(CustomComparator(sortorder));
     isRunManagerAvailable = false;
     run->getPages(&myPageVector);
     Inititate();
@@ -154,53 +155,93 @@ TournamentTree :: TournamentTree(Run * run,OrderMaker * sortorder){
 TournamentTree :: TournamentTree(RunManager * manager,OrderMaker * sortorder){
     myOrderMaker = sortorder;
     myRunManager = manager;
-    if (myQueue){
+    if (myQueue == NULL){
         delete myQueue;
     }
-    myQueue = new priority_queue<Record*,vector<Record*>,CustomComparator>(CustomComparator(sortorder));
+    myQueue = new priority_queue<QueueObject,vector<QueueObject>,CustomComparator>(CustomComparator(sortorder));
     isRunManagerAvailable = true;
     myRunManager->getPages(&myPageVector);
     Inititate();
 }
 void TournamentTree :: Inititate(){
+    Schema s("catalog","part");
     if (!myPageVector.empty()){
+        int runId = 0;
         for(vector<Page*>::iterator i = myPageVector.begin() ; i!=myPageVector.end() ; ++i){
-           Record * tempRecord = new Record();
-           Page * page = *(i);
-           if (!page->GetFirst(tempRecord) && isRunManagerAvailable){
-               if (myRunManager->getNextPageOfRun(page ,0)){
-                    myQueue->push(tempRecord);
-               }
-           }
-           else{
-                myQueue->push(tempRecord);
-           }
-        }
-        int flag = 1;
-        while(flag) {
-           
-            Record * r = myQueue->top();
-            myQueue->pop();
-            
-            if (OutputBuffer.Append(r) || myQueue->empty()){
-                flag = 0;
+            Page * page = *(i);
+            QueueObject object;
+            object.record = new Record();
+            object.runId = runId++;
+            if(page->GetFirst(object.record)){
+                myQueue->push(object);
             }
+        }
+
+        while(!myQueue->empty()){
+            QueueObject topObject = myQueue->top();
+            myQueue->pop();
+            bool OutputBufferFull = !(OutputBuffer.Append(topObject.record));
+
+            Page * topPage = myPageVector.at(topObject.runId);
+            if (!(topPage->GetFirst(topObject.record))){
+                if (myRunManager->getNextPageOfRun(topPage,topObject.runId)){
+                    if(topPage->GetFirst(topObject.record)){
+                        myQueue->push(topObject);
+                    }
+                }
+            }
+            else{
+                myQueue->push(topObject);
+            }
+            if (OutputBufferFull){
+                break;
+            }
+
+        }
+        
+    }
+}
+
+void TournamentTree :: RefillOutputBuffer(){
+    Schema s("catalog","part");
+    if (!myPageVector.empty()){
+        int runId = 0;
+        while(!myQueue->empty()){
+            QueueObject topObject = myQueue->top();
+            myQueue->pop();
+            bool OutputBufferFull = !(OutputBuffer.Append(topObject.record));
+
+            Page * topPage = myPageVector.at(topObject.runId);
+            if (!(topPage->GetFirst(topObject.record))){
+                if (myRunManager->getNextPageOfRun(topPage,topObject.runId)){
+                    if(topPage->GetFirst(topObject.record)){
+//                        topObject.record->Print(&s);
+//                        cout<<topObject.runId;
+                        myQueue->push(topObject);
+                    }
+                }
+            }
+            else{
+//                topObject.record->Print(&s);
+//                cout<<topObject.runId;
+                myQueue->push(topObject);
+            }
+            if (OutputBufferFull){
+                break;
+            }
+
         }
     }
 }
 
-bool TournamentTree :: GetSortedPage(Page &page){
-    Record temp;
-    bool isOutputBufferEmpty = true;
-    while(OutputBuffer.GetFirst(&temp)){
-        page.Append(&temp);
-        isOutputBufferEmpty = false;
+
+
+bool TournamentTree :: GetSortedPage(Page ** page){
+    if (OutputBuffer.getNumRecs()>0){
+        *(page) = &OutputBuffer;
+        return 1;
     }
-    if(isOutputBufferEmpty){
-        return 0;
-    }
-    Inititate();
-    return 1;
+    return 0;
 }
 // ------------------------------------------------------------------
 
@@ -219,11 +260,11 @@ RunManager :: RunManager(int noOfRuns,int runLength,int totalPages,char * f_path
         fileObject.startPage = pageOffset;
         fileObject.currentPage = fileObject.startPage;
         pageOffset+=runLength;
-        if (pageOffset <= totalPages){
+        if (pageOffset <=totalPages){
             fileObject.endPage = pageOffset;
         }
         else{
-            fileObject.endPage = pageOffset - (pageOffset-totalPages - 1 );
+            fileObject.endPage =  fileObject.startPage + (totalPages-fileObject.startPage-1);
         }
         runLocation.insert(make_pair(i,fileObject));
     }
@@ -248,9 +289,10 @@ void  RunManager:: getPages(vector<Page*> * myPageVector){
 bool RunManager :: getNextPageOfRun(Page * page,int runNo){
     unordered_map<int,RunFileObject>::iterator runGetter = runLocation.find(runNo);
     if(!(runGetter == runLocation.end())){
+        cout<<runGetter->second.currentPage<<runGetter->second.endPage;
         this->file.GetPage(page,runGetter->second.currentPage);
         runGetter->second.currentPage+=1;
-        if(runGetter->second.currentPage>runGetter->second.endPage){
+        if(runGetter->second.currentPage>=runGetter->second.endPage){
             runLocation.erase(runNo);
         }
         return true;
@@ -264,10 +306,17 @@ bool RunManager :: getNextPageOfRun(Page * page,int runNo){
 CustomComparator :: CustomComparator(OrderMaker * sortorder){
     this->myOrderMaker = sortorder;
 }
+bool CustomComparator :: operator ()( QueueObject lhs, QueueObject rhs){
+    int val = myComparisonEngine.Compare(lhs.record,rhs.record,myOrderMaker);
+    return (val <=0)? false : true;
+}
+
 bool CustomComparator :: operator ()( Record* lhs,  Record* rhs){
     int val = myComparisonEngine.Compare(lhs,rhs,myOrderMaker);
     return (val <=0)? true : false;
 }
+
+
 // ------------------------------------------------------------------
 
 

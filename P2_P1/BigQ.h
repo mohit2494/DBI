@@ -15,6 +15,17 @@
 
 using namespace std;
 
+typedef struct{
+    int startPage;
+    int currentPage;
+    int endPage;
+    int runId;
+} RunFileObject;
+
+typedef struct{
+    int runId;
+    Record * record;
+} QueueObject;
 
 // ------------------------------------------------------------------
 typedef struct {
@@ -53,16 +64,12 @@ class CustomComparator{
 public:
     CustomComparator(OrderMaker * sortorder);
     bool operator()( Record* lhs,  Record* rhs);
+    bool operator()( QueueObject lhs,  QueueObject rhs);
+
 };
 // ------------------------------------------------------------------
 
 // ------------------------------------------------------------------
-typedef struct{
-    int startPage;
-    int currentPage;
-    int endPage;
-    int runId;
-} RunFileObject;
 
 class RunManager{
     int noOfRuns;
@@ -86,12 +93,13 @@ class TournamentTree{
     vector<Page*> myPageVector;
     Page OutputBuffer;
     bool isRunManagerAvailable;
-    priority_queue<Record*,vector<Record*>,CustomComparator> * myQueue;
+    priority_queue<QueueObject,vector<QueueObject>,CustomComparator> * myQueue;
     void Inititate();
 public:
     TournamentTree(Run * run,OrderMaker * sortorder);
     TournamentTree(RunManager * manager,OrderMaker * sortorder);
-    bool GetSortedPage(Page &p);
+    void RefillOutputBuffer();
+    bool GetSortedPage(Page * *p);
 };
 // ------------------------------------------------------------------
 
