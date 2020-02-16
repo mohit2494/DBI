@@ -51,7 +51,7 @@ void BigQ :: Phase1()
         tRun.writeRunToFile(&this->myFile);
         tRun.clearPages();
     }
-    this->f_path = "temp.bin";
+    this->f_path = "temp.xbin";
     this->totalRuns = runCount;
 }
 
@@ -103,8 +103,8 @@ BigQ :: BigQ (Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
 
 // destructor
 BigQ::~BigQ () {
-    if(Utilities::checkfileExist("temp.bin")) {
-        if( remove( "temp.bin" ) != 0 )
+    if(Utilities::checkfileExist("temp.xbin")) {
+        if( remove( "temp.xbin" ) != 0 )
         cerr<< "Error deleting file" ;
     }
 }
@@ -145,11 +145,11 @@ int Run::addRecordAtPage(long long int pageCount, Record *rec) {
 }
 int Run::writeRunToFile(File *file) {
     int writeLocation=0;
-    if(!Utilities::checkfileExist("temp.bin")) {
-        file->Open(0,"temp.bin");
+    if(!Utilities::checkfileExist("temp.xbin")) {
+        file->Open(0,"temp.xbin");
     }
     else{
-        file->Open(1,"temp.bin");
+        file->Open(1,"temp.xbin");
         writeLocation=file->GetLength()-1;
     }
     int loopend = pages.size()>runLength ? runLength:pages.size();
