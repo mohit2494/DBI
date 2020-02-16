@@ -66,7 +66,7 @@ class CustomComparator{
     OrderMaker * myOrderMaker;
 public:
     CustomComparator(OrderMaker * sortorder);
-    bool operator()(Record* lhs,  Record* rhs);
+    bool operator()( Record* lhs,   Record* rhs);
     bool operator()(QueueObject lhs,  QueueObject rhs);
 
 };
