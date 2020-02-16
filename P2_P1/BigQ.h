@@ -47,13 +47,11 @@ class Run {
         void AddPage();
         void AddPage(Page *p);
         int addRecordAtPage(long long int pageCount, Record *rec);
-        void sortRunInternalPages();
         bool checkRunFull();
         bool clearPages();
         int getRunSize();
         vector<Page*> getPages();
         void getPages(vector<Page*> * pagevector);
-        void sortSinglePage(Page *p);
         bool customRecordComparator(Record &left, Record &right);
         int writeRunToFile(File *file);
 };
@@ -97,11 +95,14 @@ class TournamentTree{
     bool isRunManagerAvailable;
     priority_queue<QueueObject,vector<QueueObject>,CustomComparator> * myQueue;
     void Inititate();
+    void InititateForRun();
 public:
     TournamentTree(Run * run,OrderMaker * sortorder);
     TournamentTree(RunManager * manager,OrderMaker * sortorder);
     void RefillOutputBuffer();
     bool GetSortedPage(Page * *p);
+    void RefillOutputBufferForRun();
+    bool GetSortedPageForRun(Page * *p);
 };
 // ------------------------------------------------------------------
 
