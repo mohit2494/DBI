@@ -155,10 +155,12 @@ void DBFile::Add (Record &rec) {
     
         // if page is full, then write page to disk. Check if the date needs to rewritten or not
         if (myPreference.reWriteFlag){
+             cout<<endl<<this->myPage.getNumRecs()<<" Records written "<<endl;;
             this->myFile.AddPage(&this->myPage,GetPageLocationToReWrite());
             myPreference.reWriteFlag = false;
         }
         else{
+              cout<<endl<<this->myPage.getNumRecs()<<" Records written "<<endl;;
             this->myFile.AddPage(&this->myPage,GetPageLocationToWrite());
         }
         
@@ -257,6 +259,7 @@ void DBFile::MoveFirst () {
         isFileOpen = true;
         if (myPreference.pageBufferMode == WRITE && myPage.getNumRecs() > 0){
             if(!myPreference.allRecordsWritten){
+                  cout<<endl<<this->myPage.getNumRecs()<<" Records written "<<endl;;
                 myFile.AddPage(&myPage,GetPageLocationToReWrite());
             }
         }
@@ -280,10 +283,12 @@ int DBFile::Close () {
     if(myPreference.pageBufferMode == WRITE && myPage.getNumRecs() > 0){
             if(!myPreference.allRecordsWritten){
                 if (myPreference.reWriteFlag){
+                      cout<<endl<<this->myPage.getNumRecs()<<" Records written "<<endl;;
                     myFile.AddPage(&this->myPage,GetPageLocationToReWrite());
                     myPreference.reWriteFlag = false;
                 }
                 else{
+                      cout<<endl<<this->myPage.getNumRecs()<<" Records written "<<endl;;
                     myFile.AddPage(&this->myPage,GetPageLocationToWrite());
                 }
             }
@@ -310,6 +315,7 @@ int DBFile::GetNext (Record &fetchme) {
         // Flush the Page Buffer if the WRITE mode was active.
         if (myPreference.pageBufferMode == WRITE && myPage.getNumRecs() > 0){
             if(!myPreference.allRecordsWritten){
+                  cout<<endl<<this->myPage.getNumRecs()<<" Records written "<<endl;;
                 myFile.AddPage(&myPage,GetPageLocationToReWrite());
             }
             //  Only Write Records if new records were added.
@@ -344,6 +350,7 @@ int DBFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {
         if (myPreference.pageBufferMode == WRITE && myPage.getNumRecs() > 0){
             //  Only Write Records if new records were added.
             if(!myPreference.allRecordsWritten){
+                  cout<<endl<<this->myPage.getNumRecs()<<" Records written "<<endl;;
                 myFile.AddPage(&myPage,GetPageLocationToReWrite());
             }
             myPage.EmptyItOut();

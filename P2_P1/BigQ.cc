@@ -13,23 +13,38 @@ void BigQ :: Phase1()
 {
     Record tRec;
     Run tRun(this->myThreadData.runlen,this->myThreadData.sortorder);
-    
+
     // add 1 page for adding records
     long long int pageCount=0;
     long long int runCount=1;
     tRun.AddPage();
-
+    bool diff = false;
+    
     // read data from in pipe sort them into runlen pages
+    
     while(this->myThreadData.in->Remove(&tRec)) {
         if(!tRun.addRecordAtPage(pageCount, &tRec)) {
             if (tRun.checkRunFull()) {
                 tRun.sortRunInternalPages();
                 sortCompleteRun(&tRun);
-                tRun.writeRunToFile(&this->myFile);
-                tRun.clearPages();pageCount=-1;runCount++;
+                diff = tRun.writeRunToFile(&this->myFile);
+                if (diff){
+                    pageCount= 0;
+                    runCount++;
+                    tRun.addRecordAtPage(pageCount, &tRec);
+                }
+                else{
+                    tRun.clearPages();
+                    tRun.AddPage();
+                    pageCount = 0;
+                    tRun.addRecordAtPage(pageCount, &tRec);
+                }
             }
-            tRun.AddPage();pageCount++;
-            tRun.addRecordAtPage(pageCount, &tRec);
+            else{
+                tRun.AddPage();
+                pageCount++;
+                tRun.addRecordAtPage(pageCount, &tRec);
+            }
         }
     }
     if(tRun.getRunSize()!=0) {
@@ -39,20 +54,28 @@ void BigQ :: Phase1()
         tRun.clearPages();
     }
     this->f_path = "temp.bin";
+//    this->myFile.Open(this->f_path);
+//    this->myFile.MoveFirst();
+//    Record fetchme;
+//    int i=1;
+//    while(this->myFile.GetNext(fetchme)){
+//        cout<<i++<<" :: ";
+//        fetchme.Print(new Schema("catalog","partsupp"));
+//    }
     this->totalRuns = runCount;
 }
 
 // sort runs from file using Run Manager
 void BigQ :: Phase2()
 {
-    RunManager runManager(this->totalRuns,this->myThreadData.runlen,this->f_path);
+    RunManager runManager(this->myThreadData.runlen,this->f_path);
     myTree = new TournamentTree(&runManager,this->myThreadData.sortorder);
     Page * tempPage;
     while(myTree->GetSortedPage(&tempPage)){
         Record tempRecord;
         while(tempPage->GetFirst(&tempRecord)){
-            Schema s("catalog","partsupp");
-            tempRecord.Print(&s);
+//            Schema s("catalog","partsupp");
+//            tempRecord.Print(&s);
             this->myThreadData.out->Insert(&tempRecord);
         }
         myTree->RefillOutputBuffer();
@@ -152,10 +175,9 @@ void Run::sortSinglePage(Page *p) {
 int Run::addRecordAtPage(long long int pageCount, Record *rec) {
     return this->pages.at(pageCount)->Append(rec);
 }
-bool Run::writeRunToFile(DBFile *file) {
+int Run::writeRunToFile(DBFile *file) {
     //TODO::change second parameter to sorted
     //TODO::handle create for this
-    cout<<"Writing Files to Run"<<endl;
     if(!Utilities::checkfileExist("temp.bin")) {
         file->Create("temp.bin",heap,NULL);
     }
@@ -163,17 +185,29 @@ bool Run::writeRunToFile(DBFile *file) {
         file->Open("temp.bin");
 
     }
-    cout<<pages.size();
-    for(int i=0;i<this->pages.size();i++) {
+    int loopend = pages.size()>runLength ? runLength:pages.size();
+    bool difference = false;
+    for(int i=0;i<loopend;i++) {
+        cout<<i;
         Record temp;
         while(pages.at(i)->GetFirst(&temp)) {
-            temp.Print(new Schema("catalog","partsupp"));
+//            temp.Print(new Schema("catalog","partsupp"));
             file->Add(temp);
         }
     }
+    cout<<"Run Complete"<<"Vector Size"<<pages.size()<<endl;
+    if(pages.size()>runLength){
+        Page *lastPage = new Page();
+        Record temp;
+        while(pages.back()->GetFirst(&temp)) {
+            lastPage->Append(&temp);
+        }
+        this->clearPages();
+        this->AddPage(lastPage);
+        difference=true;
+    }
     file->Close();
-    cout<<"Run over"<<endl;
-
+    return difference;
 }
 // ------------------------------------------------------------------
 
@@ -215,12 +249,14 @@ void TournamentTree :: Inititate(){
         while(!myQueue->empty()){
             QueueObject topObject = myQueue->top();
             if(isRunManagerAvailable){
-                cout<<"RunID:"<<topObject.runId<<endl;
-                topObject.record->Print(new Schema("catalog","partsupp"));
+//                cout<<"RunID:"<<topObject.runId<<endl;
+//                topObject.record->Print(new Schema("catalog","partsupp"));
             }
             
             bool OutputBufferFull = !(OutputBuffer.Append(topObject.record));
-                        if (OutputBufferFull){
+            if (OutputBufferFull){
+                cout<<"here";
+                int a;
                 break;
             }
             myQueue->pop();
@@ -241,7 +277,7 @@ void TournamentTree :: Inititate(){
 }
 
 void TournamentTree :: RefillOutputBuffer(){
-    // Schema s("catalog","part");
+     Schema s("catalog","part");
     if (!myPageVector.empty()){
         int runId = 0;
         while(!myQueue->empty()){
@@ -285,12 +321,12 @@ bool TournamentTree :: GetSortedPage(Page ** page){
 
 
 // ------------------------------------------------------------------
-RunManager :: RunManager(int noOfRuns,int runLength,char * f_path){
-    this->noOfRuns = noOfRuns;
+RunManager :: RunManager(int runLength,char * f_path){
     this->runLength = runLength;
     this->f_path = f_path;
     this->file.Open(1,this->f_path);
     int totalPages = file.GetLength()-1;
+    this->noOfRuns = totalPages/runLength + (totalPages % runLength != 0);
     this->totalPages = totalPages;
     int pageOffset = 0;
     for(int i = 0; i<noOfRuns;i++){
@@ -327,6 +363,7 @@ void  RunManager:: getPages(vector<Page*> * myPageVector){
 }
 
 bool RunManager :: getNextPageOfRun(Page * page,int runNo){
+    cout<<endl<<"------------ "<<runNo<<" ------------"<<endl;
     unordered_map<int,RunFileObject>::iterator runGetter = runLocation.find(runNo);
     if(!(runGetter == runLocation.end())){
 //        cout<<runGetter->second.currentPage<<runGetter->second.endPage;

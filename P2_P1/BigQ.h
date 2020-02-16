@@ -55,7 +55,7 @@ class Run {
         void getPages(vector<Page*> * pagevector);
         void sortSinglePage(Page *p);
         bool customRecordComparator(Record &left, Record &right);
-        bool writeRunToFile(DBFile *file);
+        int writeRunToFile(DBFile *file);
 };
 // ------------------------------------------------------------------
 
@@ -81,7 +81,7 @@ class RunManager{
     char * f_path;
     unordered_map<int,RunFileObject> runLocation;
 public:
-    RunManager(int noOfRuns,int runLength,char * f_path);
+    RunManager(int runLength,char * f_path);
     void getPages(vector<Page*> * myPageVector);
     bool getNextPageOfRun(Page * page,int runNo);
 };
