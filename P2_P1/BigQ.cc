@@ -175,25 +175,29 @@ void Run::sortSinglePage(Page *p) {
 int Run::addRecordAtPage(long long int pageCount, Record *rec) {
     return this->pages.at(pageCount)->Append(rec);
 }
-int Run::writeRunToFile(DBFile *file) {
+int Run::writeRunToFile(File *file) {
     //TODO::change second parameter to sorted
     //TODO::handle create for this
+    int writeLocation=0;
     if(!Utilities::checkfileExist("temp.bin")) {
-        file->Create("temp.bin",heap,NULL);
+        file->Open(0,"temp.bin");
     }
     else{
-        file->Open("temp.bin");
-
+        file->Open(1,"temp.bin");
+        writeLocation=file->GetLength()-1;
     }
     int loopend = pages.size()>runLength ? runLength:pages.size();
     bool difference = false;
     for(int i=0;i<loopend;i++) {
         cout<<i;
-        Record temp;
-        while(pages.at(i)->GetFirst(&temp)) {
-//            temp.Print(new Schema("catalog","partsupp"));
-            file->Add(temp);
+        Record tempRecord;
+        Page tempPage;
+        while(pages.at(i)->GetFirst(&tempRecord)) {
+            //temp.Print(new Schema("catalog","partsupp"));
+            tempPage.Append(&tempRecord);
         }
+        //write this page to file
+        file->AddPage(&tempPage,writeLocation);writeLocation++;
     }
     cout<<"Run Complete"<<"Vector Size"<<pages.size()<<endl;
     if(pages.size()>runLength){

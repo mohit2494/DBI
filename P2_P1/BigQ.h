@@ -55,7 +55,7 @@ class Run {
         void getPages(vector<Page*> * pagevector);
         void sortSinglePage(Page *p);
         bool customRecordComparator(Record &left, Record &right);
-        int writeRunToFile(DBFile *file);
+        int writeRunToFile(File *file);
 };
 // ------------------------------------------------------------------
 
@@ -112,7 +112,7 @@ class BigQ {
      pthread_t myThread;
      int totalRuns;
      bool isLastRunComplete;
-     DBFile myFile;
+     File myFile;
      char * f_path;
      void Phase1();
      void Phase2();
