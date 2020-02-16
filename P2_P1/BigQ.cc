@@ -38,7 +38,7 @@ void BigQ :: Phase1()
         tRun.writeRunToFile(&this->myFile);
         tRun.clearPages();
     }
-    this->f_path = "dbfiles/temp.bin";
+    this->f_path = "temp.bin";
     this->totalRuns = runCount;
 }
 
@@ -51,8 +51,8 @@ void BigQ :: Phase2()
     while(myTree->GetSortedPage(&tempPage)){
         Record tempRecord;
         while(tempPage->GetFirst(&tempRecord)){
-        //    Schema s("catalog","part");
-        //    tempRecord.Print(&s);
+            Schema s("catalog","partsupp");
+            tempRecord.Print(&s);
             this->myThreadData.out->Insert(&tempRecord);
         }
         myTree->RefillOutputBuffer();
@@ -67,7 +67,7 @@ void BigQ::sortCompleteRun(Run *run) {
     // these pages will be part of complete sorted run
     // add 1 page for adding records
     while(myTree->GetSortedPage(&tempPage)){
-        cout<<tempPage->getNumRecs();
+//        cout<<tempPage->getNumRecs();
         Record tempRecord;
         Page * pushPage = new Page();
         while(tempPage->GetFirst(&tempRecord)){
@@ -155,29 +155,31 @@ int Run::addRecordAtPage(long long int pageCount, Record *rec) {
 bool Run::writeRunToFile(DBFile *file) {
     //TODO::change second parameter to sorted
     //TODO::handle create for this
-    if(!Utilities::checkfileExist("dbfiles/temp.bin")) {
-        file->Create("dbfiles/temp.bin",heap,NULL);
+    cout<<"Writing Files to Run"<<endl;
+    if(!Utilities::checkfileExist("temp.bin")) {
+        file->Create("temp.bin",heap,NULL);
     }
     else{
-        file->Open("dbfiles/temp.bin");
+        file->Open("temp.bin");
 
     }
+    cout<<pages.size();
     for(int i=0;i<this->pages.size();i++) {
         Record temp;
         while(pages.at(i)->GetFirst(&temp)) {
+            temp.Print(new Schema("catalog","partsupp"));
             file->Add(temp);
         }
     }
     file->Close();
+    cout<<"Run over"<<endl;
+
 }
 // ------------------------------------------------------------------
 
 // ------------------------------------------------------------------
 TournamentTree :: TournamentTree(Run * run,OrderMaker * sortorder){
     myOrderMaker = sortorder;
-    if (myQueue != NULL){
-        delete myQueue;
-    }
     myQueue = new priority_queue<QueueObject,vector<QueueObject>,CustomComparator>(CustomComparator(sortorder));
     isRunManagerAvailable = false;
     run->getPages(&myPageVector);
@@ -187,9 +189,6 @@ TournamentTree :: TournamentTree(Run * run,OrderMaker * sortorder){
 TournamentTree :: TournamentTree(RunManager * manager,OrderMaker * sortorder){
     myOrderMaker = sortorder;
     myRunManager = manager;
-    if (myQueue != NULL){
-        delete myQueue;
-    }
     myQueue = new priority_queue<QueueObject,vector<QueueObject>,CustomComparator>(CustomComparator(sortorder));
     isRunManagerAvailable = true;
     myRunManager->getPages(&myPageVector);
@@ -205,14 +204,23 @@ void TournamentTree :: Inititate(){
             object.record = new Record();
             object.runId = runId++;
             if(page->GetFirst(object.record)){
+                if(isRunManagerAvailable){
+                    cout<<"RunID:"<<object.runId<<endl;
+                    object.record->Print(new Schema("catalog","partsupp"));
+                }
                 myQueue->push(object);
             }
         }
 
         while(!myQueue->empty()){
             QueueObject topObject = myQueue->top();
+            if(isRunManagerAvailable){
+                cout<<"RunID:"<<topObject.runId<<endl;
+                topObject.record->Print(new Schema("catalog","partsupp"));
+            }
+            
             bool OutputBufferFull = !(OutputBuffer.Append(topObject.record));
-            if (OutputBufferFull){
+                        if (OutputBufferFull){
                 break;
             }
             myQueue->pop();
@@ -321,7 +329,7 @@ void  RunManager:: getPages(vector<Page*> * myPageVector){
 bool RunManager :: getNextPageOfRun(Page * page,int runNo){
     unordered_map<int,RunFileObject>::iterator runGetter = runLocation.find(runNo);
     if(!(runGetter == runLocation.end())){
-        cout<<runGetter->second.currentPage<<runGetter->second.endPage;
+//        cout<<runGetter->second.currentPage<<runGetter->second.endPage;
         this->file.GetPage(page,runGetter->second.currentPage);
         runGetter->second.currentPage+=1;
         if(runGetter->second.currentPage>runGetter->second.endPage){
@@ -343,9 +351,9 @@ bool CustomComparator :: operator ()( QueueObject lhs, QueueObject rhs){
     return (val <=0)? false : true;
 }
 
-bool CustomComparator :: operator ()( Record* lhs,  Record* rhs){
+bool CustomComparator :: operator ()( Record* lhs, Record* rhs){
     int val = myComparisonEngine.Compare(lhs,rhs,myOrderMaker);
-    return (val <=0)? true : false;
+    return (val <0)? true : false;
 }
 // ------------------------------------------------------------------
 

@@ -407,4 +407,3 @@ void DBFile::DumpPreference(){
     file.close();
     //Utilities::Log("Preferences Dumped!...");
 }
-
