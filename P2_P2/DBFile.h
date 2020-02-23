@@ -12,10 +12,48 @@
 typedef enum {heap, sorted, tree} fType;
 typedef enum {READ, WRITE,IDLE} BufferMode;
 
+
+class GenericDBFile{
+    //  Used to read & write page to the disk.
+    File myFile;
+    //  Used as a buffer to read and write data.
+    Page myPage;
+    // Pointer to preference file
+    Preference * myPreference
+public:
+    int GetPageLocationToWrite();
+    int GetPageLocationToRead(BufferMode mode);
+    int GetPageLocationToReWrite();
+    void MoveFirst ();
+    int Create (char *fpath);
+    int Open (const char *fpath);
+    void Load (Schema &myschema, const char *loadpath);
+    void Add (Record &addme);
+    int GetNext (Record &fetchme);
+    int GetNext (Record &fetchme, CNF &cnf, Record &literal);
+    int Close ();
+
+};
+
+class HeapDBFile: public virtual GenericDBFile{
+public:
+    HeapDBFile();
+    ~HeapDBFile();
+    
+};
+
+class SortedDBFile: public virtual GenericDBFile{
+public:
+    SortedDBFile();
+    ~SortedDBFile();
+};
+
+
 // class to take care of meta data for each table
 class Preference{
 public:
-
+    // Indicator for type of DBFile
+    fType f_type
 	// Variable to store the state in which the page buffer is present;
 	// Possible values : WRITE,READ and IDLE(default state when the file is just created )
 	BufferMode pageBufferMode;
@@ -58,15 +96,12 @@ public:
 
 class DBFile {
 private:
-//  Used to read & write page to the disk.
-    File myFile;
-//  Used as a buffer to read and write data.
-    Page myPage;
+//  Generic DBFile Pointer
+    GenericDBFile * myFilePtr;
 //  Used to keep track of the state.
     Preference myPreference;
 //  Used to keep track of the state.
 	ComparisonEngine myCompEng;
-
 public:
 	// Constructor and Destructor
 	DBFile ();
@@ -74,7 +109,7 @@ public:
 	
 	// Function to load preference from the disk. This is needed to make read and writes persistent.
 	// @input - the file path of the table to be created or opened. Each tbl file has a corresponding .pref
-	void LoadPreference(char*f_path);
+	void LoadPreference(char*f_path,fType f_type);
 
 	// Function to dumpn the preference to the disk. This is needed to make read and writes persistent.
 	void DumpPreference();

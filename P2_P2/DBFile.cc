@@ -12,42 +12,57 @@
 #include "fstream"
 #include "Utilities.h"
 
-/*************** Preference Class Definitions ******************/
+/*-----------------------------------------------------------------------------------*/
 
-// BufferMode Preference::getPageBufferMode() {
-//     return this->pageBufferMode;
-// }
+int GenericDBFile::GetPageLocationToWrite() {
+    int pageLocation = myFile.GetLength();
+    return !pageLocation ? 0 : pageLocation-1;
+}
 
-// void Preference::setPageBufferMode(BufferMode pageBufferMode) {
-//     this->pageBufferMode = pageBufferMode;
-// }
+int GenericDBFile::GetPageLocationToRead(BufferMode mode) {
+    if (mode == WRITE){
+        return myPreference.currentPage-2;
+    }
+    else if (mode == READ){
+        return myPreference.currentPage;
+    }
+}
 
-// off_t Preference::getCurrentPage() {
-//         return this->currentPage;
-// }
+int GenericDBFile::GetPageLocationToReWrite(){
+    int pageLocation = myFile.GetLength();
+    return pageLocation == 2 ? 0 : pageLocation-2;
 
-// void Preference::setCurrentPage(off_t currentPage) {
-//     this->currentPage = currentPage;
-// }
+}
 
-// bool Preference::isPageFull() {
-//     return this->isPageFull;
-// }
+void GenericDBFile::MoveFirst () {
+    if (myFile.IsFileOpen()){
+        isFileOpen = true;
+        if (myPreference->pageBufferMode == WRITE && myPage->getNumRecs() > 0){
+            if(!myPreference.allRecordsWritten){
+                myFile.AddPage(&myPage,GetPageLocationToReWrite());
+            }
+        }
+        myPage.EmptyItOut();
+        myPreference.pageBufferMode = READ;
+        myFile.MoveToFirst();
+        myPreference.currentPage = 0;
+        myPreference.currentRecordPosition = 0;
+    }
+}
 
-// void Preference::setisPageFull(bool isPageFull) {
-//     this->isPageFull = isPageFull;
-// }
+/*-----------------------------------------------------------------------------------*/
 
-// int Preference::getCurrentRecordPosition(){
-//         return this->currentRecordPosition;
-// }
+/*-----------------------------------------------------------------------------------*/
+HeapDBFile::HeapDBFile(Preference * preference){
+    myPreference = preference;
+}
+/*-----------------------------------------------------------------------------------*/
 
-// void Preference::setCurrentRecordPosition(int currentRecord) {
-//         this->currentRecordPosition = currentRecord;
-// }
-/**************** End of Preference Class ********************/
-
-
+/*-----------------------------------------------------------------------------------*/
+SortedDBFile::SortedDBFile(Preference * preference){
+    myPreference = preference;
+}
+/*-----------------------------------------------------------------------------------*/
 
 // stub file .. replace it with your own DBFile.cc
 DBFile::DBFile () {
@@ -62,64 +77,32 @@ int DBFile::Create (const char *f_path, fType f_type, void *startup) {
         cout << "file you are about to create already exists!"<<endl;
         return 0;
     }
+    // changing .bin extension to .pref for storing preferences.
+    string s(f_path);
+    string news = s.substr(0,s.find_last_of('.'))+".pref";
+    char* finalString = new char[news.length()+1];
+    strcpy(finalString, news.c_str());
+    // opening file with given file extension
+    myFile.Open(0,(char *)f_path);
+    // loading preferences
+    LoadPreference(finalString,f_type);
+    
     // check if the file type is correct
     if (f_type == heap){
-
-            // changing .bin extension to .pref for storing preferences.
-            string s(f_path);
-            string news = s.substr(0,s.find_last_of('.'))+".pref";
-
-            //Utilities::Log("Inside DBFile Create, preference file path after replacing extension");
-            //Utilities::Log(news);
-
-            char* finalString = new char[news.length()+1];
-            strcpy(finalString, news.c_str());
-
-            // opening file with given file extension
-            myFile.Open(0,(char *)f_path);
-
-            // loading preferences
-            //Utilities::Log("File path before calling LoadPreference ");
-            //Utilities::Log(string(finalString));
-            LoadPreference(finalString);
-            isFileOpen = true;
-            return 1;
+        myFilePtr = new HeapDBFile();
+        myFilePtr->Create(f_path);
+        isFileOpen = true;
+        return 1;
+    }
+    else if(f_type == sorted){
+        myFilePtr = new SortedDBFile();
+        myFilePtr->Create(f_path,startup);
+        isFileOpen = true;
+        return 1;
     }
     return 0;
 }
 
-int DBFile::GetPageLocationToWrite() {
-    int pageLocation = myFile.GetLength();
-    return !pageLocation ? 0 : pageLocation-1;
-}
-
-int DBFile::GetPageLocationToRead(BufferMode mode) {
-    if (mode == WRITE){
-        return myPreference.currentPage-2;
-    }
-    else if (mode == READ){
-        return myPreference.currentPage;
-    }
-}
-
-int DBFile::GetPageLocationToReWrite(){
-    int pageLocation = myFile.GetLength();
-    return pageLocation == 2 ? 0 : pageLocation-2;
-
-}
-
-/**
-    In order to add records to the file,
-    the function Add is used. In the case of
-    the unordered heap file that you are implementing
-    in this assignment, this function simply adds the
-    new record to the end of the file
-    Note that this function should actually consume addMe,
-    so that after addMe has been put into the file, it cannot
-    be used again. There are then two functions that allow
-    for record retrieval from a DBFile instance; all are
-    called Next.
-**/
 void DBFile::Add (Record &rec) {
 
     if (!isFileOpen){
@@ -365,7 +348,7 @@ int DBFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {
 
 }
 
-void DBFile::LoadPreference(char * newFilePath) {
+void DBFile::LoadPreference(char * newFilePath,fType f_type) {
     ifstream file;
     if (Utilities::checkfileExist(newFilePath)) {
         //Utilities::Log("Opening preference file located at : "+ std::string(newFilePath));
@@ -380,6 +363,7 @@ void DBFile::LoadPreference(char * newFilePath) {
         strcpy(myPreference.preferenceFilePath,newFilePath);
     }
     else {
+        myPreference.f_type = f_type;
         myPreference.preferenceFilePath = (char*) malloc(strlen(newFilePath) + 1);
         strcpy(myPreference.preferenceFilePath,newFilePath);
         myPreference.currentPage = 0;
@@ -389,7 +373,6 @@ void DBFile::LoadPreference(char * newFilePath) {
         myPreference.reWriteFlag= false;
         myPreference.allRecordsWritten = true;
     }
-    //Utilities::Log("Preferences Loaded..!");
 }
 
 void DBFile::DumpPreference(){
