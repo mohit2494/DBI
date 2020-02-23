@@ -44,6 +44,8 @@ public:
 	Type FindType (char *attName);
 
 	// this reads the specification for the schema in from a file
+	Schema (const char *fName, const char *relName);
+
 	Schema (char *fName, char *relName);
 
 	// this constructs a sort order structure that can be used to
