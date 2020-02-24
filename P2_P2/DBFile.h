@@ -9,86 +9,85 @@
 #include "ComparisonEngine.h"
 #include <string>
 
-typedef enum {heap, sorted, tree} fType;
+typedef enum {heap, sorted, tree,undefined} fType;
 typedef enum {READ, WRITE,IDLE} BufferMode;
+
+// class to take care of meta data for each table
+class Preference{
+public:
+    // Indicator for type of DBFile
+    fType f_type;
+    // Variable to store the state in which the page buffer is present;
+    // Possible values : WRITE,READ and IDLE(default state when the file is just created )
+    BufferMode pageBufferMode;
+
+    // Variable to track Current Page from which we need to READ or WRITE to with the file. May have different value according to the mode.
+    off_t currentPage;
+
+    // Variable to trac the Current record during the READ and WRITE to the file.
+    int currentRecordPosition;
+
+    // Boolean to check if the page isFull or not.
+    bool isPageFull;
+
+    //  Variable to store the file path  to the preference file
+    char * preferenceFilePath;
+
+    // Boolean indicating if all the records in the page have been written in the file(disk) or not.
+    bool allRecordsWritten;
+
+    // Boolean indicating if the page needs to be rewritten or not.
+    bool reWriteFlag;
+    
+    void * startup;
+};
 
 
 class GenericDBFile{
+protected:
     //  Used to read & write page to the disk.
     File myFile;
     //  Used as a buffer to read and write data.
     Page myPage;
     // Pointer to preference file
-    Preference * myPreference
+    Preference * myPreferencePtr;
+    //  Used to keep track of the state.
+    ComparisonEngine myCompEng;
 public:
     int GetPageLocationToWrite();
     int GetPageLocationToRead(BufferMode mode);
     int GetPageLocationToReWrite();
+    void Create (char * f_path,fType f_type, void *startup);
+    int Open (char * f_path);
     void MoveFirst ();
-    int Create (char *fpath);
-    int Open (const char *fpath);
-    void Load (Schema &myschema, const char *loadpath);
+    virtual void Add (Record &addme);
+    virtual void Load (Schema &myschema, const char *loadpath);
+    virtual int GetNext (Record &fetchme);
+    virtual int GetNext (Record &fetchme, CNF &cnf, Record &literal);
+    virtual int Close();
+};
+
+class HeapDBFile: public virtual GenericDBFile{
+public:
+    HeapDBFile(Preference * preference);
+    ~HeapDBFile();
     void Add (Record &addme);
+    void Load (Schema &myschema, const char *loadpath);
     int GetNext (Record &fetchme);
     int GetNext (Record &fetchme, CNF &cnf, Record &literal);
     int Close ();
 
 };
 
-class HeapDBFile: public virtual GenericDBFile{
-public:
-    HeapDBFile();
-    ~HeapDBFile();
-    
-};
-
 class SortedDBFile: public virtual GenericDBFile{
 public:
-    SortedDBFile();
+    SortedDBFile(Preference * preference);
     ~SortedDBFile();
-};
-
-
-// class to take care of meta data for each table
-class Preference{
-public:
-    // Indicator for type of DBFile
-    fType f_type
-	// Variable to store the state in which the page buffer is present;
-	// Possible values : WRITE,READ and IDLE(default state when the file is just created )
-	BufferMode pageBufferMode;
-
-	// Variable to track Current Page from which we need to READ or WRITE to with the file. May have different value according to the mode.
-	off_t currentPage;
-
-	// Variable to trac the Current record during the READ and WRITE to the file.
-	int currentRecordPosition;
-
-	// Boolean to check if the page isFull or not.
-	bool isPageFull;
-
-	//  Variable to store the file path  to the preference file
-	char * preferenceFilePath;
-
-	// Boolean indicating if all the records in the page have been written in the file(disk) or not.
-	bool allRecordsWritten;
-
-	// Boolean indicating if the page needs to be rewritten or not.
-	bool reWriteFlag;
-
-
-	// relevant getters and setters
-	// void setCurrentPage(off_t currentPage);
-	// off_t getCurrentPage();
-	//
-	// bool isPageFull;
-	// void setisPageFull(bool isPageFull);
-	//
-	// int getCurrentRecordPosition();
-	// void setCurrentRecordPosition(int currentRecord);
-	//
-	// BufferMode getPageBufferMode();
-	// void setPageBufferMode(BufferMode pageBufferMode);
+    void Add (Record &addme);
+    void Load (Schema &myschema, const char *loadpath);
+    int GetNext (Record &fetchme);
+    int GetNext (Record &fetchme, CNF &cnf, Record &literal);
+    int Close ();
 };
 
 
@@ -100,8 +99,6 @@ private:
     GenericDBFile * myFilePtr;
 //  Used to keep track of the state.
     Preference myPreference;
-//  Used to keep track of the state.
-	ComparisonEngine myCompEng;
 public:
 	// Constructor and Destructor
 	DBFile ();
