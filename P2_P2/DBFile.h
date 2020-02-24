@@ -54,6 +54,8 @@ protected:
     //  Used to keep track of the state.
     ComparisonEngine myCompEng;
 public:
+    GenericDBFile();
+    ~GenericDBFile();
     int GetPageLocationToWrite();
     int GetPageLocationToRead(BufferMode mode);
     int GetPageLocationToReWrite();

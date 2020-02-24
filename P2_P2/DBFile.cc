@@ -13,6 +13,12 @@
 #include "Utilities.h"
 
 /*-----------------------------------------------------------------------------------*/
+GenericDBFile::GenericDBFile(){
+    
+}
+GenericDBFile::~GenericDBFile(){
+    
+}
 
 int GenericDBFile::GetPageLocationToWrite() {
     int pageLocation = myFile.GetLength();
@@ -309,12 +315,12 @@ int DBFile::Create (const char *f_path, fType f_type, void *startup) {
     // check if the file type is correct
     if (f_type == heap){
         myFilePtr = new HeapDBFile(&myPreference);
-        myFilePtr->Create((char *)f_path,f_type,startup);
+//        myFilePtr->Create((char *)f_path,f_type,startup);
         return 1;
     }
     else if(f_type == sorted){
         myFilePtr = new SortedDBFile(&myPreference);
-        myFilePtr->Create((char *)f_path,f_type,startup);
+//        myFilePtr->Create((char *)f_path,f_type,startup);
         return 1;
     }
     return 0;
@@ -347,52 +353,52 @@ int DBFile::Open (const char *f_path) {
         myFilePtr = new SortedDBFile(&myPreference);
     }
     // opening file using given path
-    return myFilePtr->Open((char *)f_path);
+//    return myFilePtr->Open((char *)f_path);
 }
 
 void DBFile::Add (Record &rec) {
     if (myFilePtr!=NULL){
-        myFilePtr->Add(rec);
+//        myFilePtr->Add(rec);
     }
 }
 
 void DBFile::Load (Schema &f_schema, const char *loadpath) {
     if (myFilePtr!=NULL){
-           myFilePtr->Load(f_schema,loadpath);
+//           myFilePtr->Load(f_schema,loadpath);
     }
 }
 
 
 void DBFile::MoveFirst () {
     if (myFilePtr!=NULL){
-           myFilePtr->MoveFirst();
+//           myFilePtr->MoveFirst();
     }
 }
 
 int DBFile::Close () {
-    if (myFilePtr!=NULL){
-        if (myFilePtr->Close()){
-            DumpPreference();
-            return 1;
-
-        }
-        else{
-            return 0;
-        };
-    }
+//    if (myFilePtr!=NULL){
+//        if (myFilePtr->Close()){
+//            DumpPreference();
+//            return 1;
+//
+//        }
+//        else{
+//            return 0;
+//        };
+//    }
 }
 
 
 int DBFile::GetNext (Record &fetchme) {
     if (myFilePtr != NULL){
-        return myFilePtr->GetNext(fetchme);
+//        return myFilePtr->GetNext(fetchme);
     }
     return 0;
 }
 
 int DBFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {
     if (myFilePtr != NULL){
-        return myFilePtr->GetNext(fetchme,cnf,literal);
+//        return myFilePtr->GetNext(fetchme,cnf,literal);
     }
     return 0;
 }
