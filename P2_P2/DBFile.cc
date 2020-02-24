@@ -32,7 +32,10 @@ int GenericDBFile::GetPageLocationToReWrite(){
 void GenericDBFile::Create(char * f_path,fType f_type, void *startup){
     // opening file with given file extension
     myFile.Open(0,(char *)f_path);
-    myPreferencePtr->startup = startup;
+    if (startup!=NULL and f_type==sorted){
+        myPreferencePtr->orderMaker = ((SortedStartUp *)startup)->o;
+        myPreferencePtr->runLength  = ((SortedStartUp *)startup)->l;
+    }
 }
 
 int GenericDBFile::Open(char * f_path){
@@ -70,6 +73,13 @@ void GenericDBFile::MoveFirst () {
         myPreferencePtr->currentRecordPosition = 0;
     }
 }
+
+void GenericDBFile::Add(Record &addme){}
+void GenericDBFile::Load(Schema &myschema, const char *loadpath){}
+int GenericDBFile::GetNext(Record &fetchme){}
+int GenericDBFile::GetNext(Record &fetchme, CNF &cnf, Record &literal){}
+int GenericDBFile::Close(){}
+
 /*-----------------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------------*/
@@ -288,7 +298,7 @@ DBFile::DBFile () {
 }
 
 DBFile::~DBFile () {
-//    delete myFilePtr;
+    delete myFilePtr;
     myFilePtr = NULL;
 }
 
@@ -407,6 +417,7 @@ void DBFile::LoadPreference(char * newFilePath,fType f_type) {
         file.read((char*)&myPreference,sizeof(Preference));
         myPreference.preferenceFilePath = (char*)malloc(strlen(newFilePath) + 1);
         strcpy(myPreference.preferenceFilePath,newFilePath);
+        myPreference.orderMaker = (OrderMaker *)(&myPreference.orderMakerBits);
     }
     else {
         myPreference.f_type = f_type;
@@ -418,21 +429,19 @@ void DBFile::LoadPreference(char * newFilePath,fType f_type) {
         myPreference.pageBufferMode = IDLE;
         myPreference.reWriteFlag= false;
         myPreference.allRecordsWritten = true;
-        myPreference.startup = NULL;
+        myPreference.orderMaker = NULL;
+        myPreference.runLength = 0;
     }
 }
 
 void DBFile::DumpPreference(){
-    //Utilities::Log("Dumping preferences at :"+ std::string(myPreference.preferenceFilePath));
     ofstream file;
     file.open(myPreference.preferenceFilePath,ios::out);
     if(!file) {
-        //Utilities::Log("Error in dumping preferences at :"+ std::string(myPreference.preferenceFilePath));
         cerr<<"Error in opening file for writing.."<<endl;
         exit(1);
     }
-    //Utilities::Log("Dumping preferences at :"+ std::string(myPreference.preferenceFilePath));
+    strncpy(myPreference.orderMakerBits,(char*)myPreference.orderMaker,sizeof(OrderMaker));
     file.write((char*)&myPreference,sizeof(Preference));
     file.close();
-    //Utilities::Log("Preferences Dumped!...");
 }

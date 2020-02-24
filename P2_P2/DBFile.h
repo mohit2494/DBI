@@ -16,6 +16,12 @@
 typedef enum {heap, sorted, tree,undefined} fType;
 typedef enum {READ, WRITE,IDLE} BufferMode;
 
+typedef struct {
+    OrderMaker *o;
+    int l;
+    
+} SortedStartUp;
+
 // class to take care of meta data for each table
 class Preference{
 public:
@@ -43,7 +49,16 @@ public:
     // Boolean indicating if the page needs to be rewritten or not.
     bool reWriteFlag;
     
-    void * startup;
+    // OrderMaker as an Input For Sorted File.
+    
+    char orderMakerBits[sizeof(OrderMaker)];
+    
+    // OrderMaker as an Input For Sorted File.
+    OrderMaker * orderMaker;
+    
+    // Run Length For Sorting
+    int runLength;
+
 };
 
 
@@ -59,21 +74,23 @@ protected:
     ComparisonEngine myCompEng;
 public:
     GenericDBFile();
-    ~GenericDBFile();
     int GetPageLocationToWrite();
     int GetPageLocationToRead(BufferMode mode);
     int GetPageLocationToReWrite();
     void Create (char * f_path,fType f_type, void *startup);
     int Open (char * f_path);
     void MoveFirst ();
-    virtual void Add (Record &addme)=0;
-    virtual void Load (Schema &myschema, const char *loadpath)=0;
-    virtual int GetNext (Record &fetchme)=0;
-    virtual int GetNext (Record &fetchme, CNF &cnf, Record &literal)=0;
-    virtual int Close()=0   ;
+    
+    //  virtual function
+    virtual ~GenericDBFile();
+    virtual void Add (Record &addme);
+    virtual void Load (Schema &myschema, const char *loadpath);
+    virtual int GetNext (Record &fetchme);
+    virtual int GetNext (Record &fetchme, CNF &cnf, Record &literal);
+    virtual int Close();
 };
 
-class HeapDBFile: public  GenericDBFile{
+class HeapDBFile: public virtual GenericDBFile{
 public:
     HeapDBFile(Preference * preference);
     ~HeapDBFile();

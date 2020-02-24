@@ -28,13 +28,13 @@ void test1 () {
 
 
 	OrderMaker o;
-	rel->get_sort_order (o);
 
 	int runlen = 0;
 	while (runlen < 1) {
 		cout << "\t\n specify runlength:\n\t ";
 		cin >> runlen;
 	}
+    rel->get_sort_order (o);
 	struct {OrderMaker *o; int l;} startup = {&o, runlen};
 
 	DBFile dbfile;
