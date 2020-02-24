@@ -1,15 +1,4 @@
-#include "TwoWayList.h"
-#include "Record.h"
-#include "Schema.h"
-#include "File.h"
-#include "Comparison.h"
-#include "ComparisonEngine.h"
 #include "DBFile.h"
-#include "Defs.h"
-#include <stdlib.h>
-#include <iostream>
-#include <string.h>
-#include "fstream"
 #include "Utilities.h"
 
 /*-----------------------------------------------------------------------------------*/
@@ -17,7 +6,7 @@ GenericDBFile::GenericDBFile(){
     
 }
 GenericDBFile::~GenericDBFile(){
-    
+
 }
 
 int GenericDBFile::GetPageLocationToWrite() {
@@ -81,7 +70,6 @@ void GenericDBFile::MoveFirst () {
         myPreferencePtr->currentRecordPosition = 0;
     }
 }
-
 /*-----------------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------------*/
@@ -89,7 +77,7 @@ HeapDBFile :: HeapDBFile(Preference * preference){
     myPreferencePtr = preference;
 }
 
-void HeapDBFile::Add (Record &rec) {
+void HeapDBFile :: Add (Record &rec) {
 
     if (!myFile.IsFileOpen()){
         cerr << "Trying to load a file which is not open!";
@@ -139,7 +127,7 @@ void HeapDBFile::Add (Record &rec) {
     myPreferencePtr->allRecordsWritten=false;
 }
 
-void HeapDBFile::Load (Schema &f_schema, const char *loadpath) {
+void HeapDBFile :: Load (Schema &f_schema, const char *loadpath) {
 
     if (!myFile.IsFileOpen()){
         cerr << "Trying to load a file which is not open!";
@@ -168,7 +156,7 @@ void HeapDBFile::Load (Schema &f_schema, const char *loadpath) {
 
 }
 
-int HeapDBFile::GetNext (Record &fetchme) {
+int HeapDBFile :: GetNext (Record &fetchme) {
     if (myFile.IsFileOpen()){
         // Flush the Page Buffer if the WRITE mode was active.
         if (myPreferencePtr->pageBufferMode == WRITE && myPage.getNumRecs() > 0){
@@ -202,7 +190,7 @@ int HeapDBFile::GetNext (Record &fetchme) {
     }
 }
 
-int HeapDBFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {
+int HeapDBFile :: GetNext (Record &fetchme, CNF &cnf, Record &literal) {
         // Flush the Page Buffer if the WRITE mode was active.
         if (myPreferencePtr->pageBufferMode == WRITE && myPage.getNumRecs() > 0){
             //  Only Write Records if new records were added.
@@ -229,7 +217,7 @@ int HeapDBFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {
 
 }
 
-int HeapDBFile::Close () {
+int HeapDBFile :: Close () {
     if (!myFile.IsFileOpen()) {
         cout << "trying to close a file which is not open!"<<endl;
         return 0;
@@ -258,30 +246,35 @@ int HeapDBFile::Close () {
     return 1;
 }
 
+HeapDBFile::~HeapDBFile(){
+
+}
 
 /*-----------------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------------*/
-SortedDBFile::SortedDBFile(Preference * preference){
+SortedDBFile :: SortedDBFile(Preference * preference){
     myPreferencePtr = preference;
 }
-void SortedDBFile::Add(Record &addme){
+void SortedDBFile :: Add(Record &addme){
     cout<<"Add";
 }
-void SortedDBFile::Load(Schema &myschema, const char *loadpath){
+void SortedDBFile :: Load(Schema &myschema, const char *loadpath){
     cout<<"Load";
 
 }
-int SortedDBFile::GetNext(Record &fetchme){
+int SortedDBFile :: GetNext(Record &fetchme){
     cout<<"GetNext";
 
 }
-int SortedDBFile::GetNext(Record &fetchme, CNF &cnf, Record &literal){
+int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
     cout<<"GetNext CNF";
 
 }
-int SortedDBFile::Close(){
+int SortedDBFile :: Close(){
     cout<<"Close";
+}
+SortedDBFile::~SortedDBFile(){
 
 }
 /*-----------------------------------------------------------------------------------*/
@@ -295,7 +288,7 @@ DBFile::DBFile () {
 }
 
 DBFile::~DBFile () {
-    delete myFilePtr;
+//    delete myFilePtr;
     myFilePtr = NULL;
 }
 
@@ -315,12 +308,12 @@ int DBFile::Create (const char *f_path, fType f_type, void *startup) {
     // check if the file type is correct
     if (f_type == heap){
         myFilePtr = new HeapDBFile(&myPreference);
-//        myFilePtr->Create((char *)f_path,f_type,startup);
+        myFilePtr->Create((char *)f_path,f_type,startup);
         return 1;
     }
     else if(f_type == sorted){
         myFilePtr = new SortedDBFile(&myPreference);
-//        myFilePtr->Create((char *)f_path,f_type,startup);
+        myFilePtr->Create((char *)f_path,f_type,startup);
         return 1;
     }
     return 0;
@@ -353,52 +346,52 @@ int DBFile::Open (const char *f_path) {
         myFilePtr = new SortedDBFile(&myPreference);
     }
     // opening file using given path
-//    return myFilePtr->Open((char *)f_path);
+    return myFilePtr->Open((char *)f_path);
 }
 
 void DBFile::Add (Record &rec) {
     if (myFilePtr!=NULL){
-//        myFilePtr->Add(rec);
+        myFilePtr->Add(rec);
     }
 }
 
 void DBFile::Load (Schema &f_schema, const char *loadpath) {
     if (myFilePtr!=NULL){
-//           myFilePtr->Load(f_schema,loadpath);
+           myFilePtr->Load(f_schema,loadpath);
     }
 }
 
 
 void DBFile::MoveFirst () {
     if (myFilePtr!=NULL){
-//           myFilePtr->MoveFirst();
+           myFilePtr->MoveFirst();
     }
 }
 
 int DBFile::Close () {
-//    if (myFilePtr!=NULL){
-//        if (myFilePtr->Close()){
-//            DumpPreference();
-//            return 1;
-//
-//        }
-//        else{
-//            return 0;
-//        };
-//    }
+    if (myFilePtr!=NULL){
+        if (myFilePtr->Close()){
+            DumpPreference();
+            return 1;
+
+        }
+        else{
+            return 0;
+        };
+    }
 }
 
 
 int DBFile::GetNext (Record &fetchme) {
     if (myFilePtr != NULL){
-//        return myFilePtr->GetNext(fetchme);
+        return myFilePtr->GetNext(fetchme);
     }
     return 0;
 }
 
 int DBFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {
     if (myFilePtr != NULL){
-//        return myFilePtr->GetNext(fetchme,cnf,literal);
+        return myFilePtr->GetNext(fetchme,cnf,literal);
     }
     return 0;
 }

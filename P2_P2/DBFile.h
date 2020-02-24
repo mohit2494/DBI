@@ -1,13 +1,17 @@
 #ifndef DBFILE_H
 #define DBFILE_H
 
+#include <string>
+#include <stdlib.h>
+#include <iostream>
+#include <fstream>
+#include "Defs.h"
 #include "TwoWayList.h"
 #include "Record.h"
 #include "Schema.h"
 #include "File.h"
 #include "Comparison.h"
 #include "ComparisonEngine.h"
-#include <string>
 
 typedef enum {heap, sorted, tree,undefined} fType;
 typedef enum {READ, WRITE,IDLE} BufferMode;
@@ -62,14 +66,14 @@ public:
     void Create (char * f_path,fType f_type, void *startup);
     int Open (char * f_path);
     void MoveFirst ();
-    virtual void Add (Record &addme);
-    virtual void Load (Schema &myschema, const char *loadpath);
-    virtual int GetNext (Record &fetchme);
-    virtual int GetNext (Record &fetchme, CNF &cnf, Record &literal);
-    virtual int Close();
+    virtual void Add (Record &addme)=0;
+    virtual void Load (Schema &myschema, const char *loadpath)=0;
+    virtual int GetNext (Record &fetchme)=0;
+    virtual int GetNext (Record &fetchme, CNF &cnf, Record &literal)=0;
+    virtual int Close()=0   ;
 };
 
-class HeapDBFile: public virtual GenericDBFile{
+class HeapDBFile: public  GenericDBFile{
 public:
     HeapDBFile(Preference * preference);
     ~HeapDBFile();
@@ -81,7 +85,7 @@ public:
 
 };
 
-class SortedDBFile: public virtual GenericDBFile{
+class SortedDBFile: public  GenericDBFile{
 public:
     SortedDBFile(Preference * preference);
     ~SortedDBFile();
