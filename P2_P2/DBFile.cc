@@ -273,7 +273,7 @@ SortedDBFile::~SortedDBFile(){
 
 }
 void SortedDBFile :: Add(Record &addme){
-    cout<<"Add"<<endl;
+//    cout<<"Add"<<endl;
     if (!myFile.IsFileOpen()){
         cerr << "Trying to load a file which is not open!";
         exit(1);
@@ -377,7 +377,7 @@ int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
 
 }
 int SortedDBFile :: Close(){
-    cout<<"Close"<<endl;
+//    cout<<"Close"<<endl;
     if (!myFile.IsFileOpen()) {
         cout << "trying to close a file which is not open!"<<endl;
         return 0;
@@ -424,55 +424,66 @@ void SortedDBFile::MergeSortedInputWithFile(){
     bool fileReadFlag = true;
     bool outputPipeReadFlag = true;
     
+    bool getNextFileRecord = true;
+    bool getNextOutputPipeRecord = true;
+    Record * fileRecordptr = NULL;
+    Record * outputPipeRecordPtr = NULL;
     while(fileReadFlag || outputPipeReadFlag){
-        Record fileRecord;
-        Record outputPipeRecord;
-        if(!outputPipePtr->Remove(&outputPipeRecord)){
-            outputPipeReadFlag= false;
-        }
-        if(outputPipeReadFlag){
-            outputPipeRecord.Print(new Schema("catalog","nation"));
+        if (getNextOutputPipeRecord){
+            outputPipeRecordPtr = new Record();
+            getNextOutputPipeRecord = false;
+            if(!outputPipePtr->Remove(outputPipeRecordPtr)){
+                cout<<"outputPipePtr over"<<endl;
+                outputPipeReadFlag= false;
+            }
         }
         
-        if(!myPage.GetFirst(&fileRecord)){
-            if(currentPage<totalPages){
-                myFile.GetPage(&myPage,currentPage);
-                currentPage++;
+        if (getNextFileRecord){
+            fileRecordptr=new Record();
+            getNextFileRecord = false;
+            if(!myPage.GetFirst(fileRecordptr)){
+                if(currentPage<totalPages){
+                    myFile.GetPage(&myPage,currentPage);
+                    myPage.GetFirst(fileRecordptr);
+                    currentPage++;
+                }
+                else{
+                    fileReadFlag= false;
+                }
             }
-            else{
-                fileReadFlag= false;
-            }
-        }
-        if(fileReadFlag){
-            fileRecord.Print(new Schema("catalog","nation"));
         }
         
         // select record to be written
         Record writeRecord;
         bool consumeFlag = false;
         if(fileReadFlag and outputPipeReadFlag){
-            if (myCompEng.Compare(&fileRecord,&outputPipeRecord,myPreferencePtr->orderMaker)<=0){
-                writeRecord.Consume(&fileRecord);
+            if (myCompEng.Compare(fileRecordptr,outputPipeRecordPtr,myPreferencePtr->orderMaker)<=0){
+                writeRecord.Consume(fileRecordptr);
                 consumeFlag=true;
+                getNextFileRecord=true;
             }
             else{
-                writeRecord.Consume(&outputPipeRecord);
+                writeRecord.Consume(outputPipeRecordPtr);
                 consumeFlag=true;
+                getNextOutputPipeRecord=true;
             }
         }
         else if (fileReadFlag){
-            writeRecord.Consume(&fileRecord);
+            writeRecord.Consume(fileRecordptr);
             consumeFlag=true;
+            getNextFileRecord=true;
 
         }
         else if (outputPipeReadFlag){
-            writeRecord.Consume(&outputPipeRecord);
+            writeRecord.Consume(outputPipeRecordPtr);
             consumeFlag=true;
+            getNextOutputPipeRecord=true;
         }
         
         
         if(consumeFlag && !page.Append(&writeRecord)) {
             // Add the page to new File
+            cout<<page.getNumRecs()<<"Writing Records"<<endl;
             newFile.AddPage(&page,newFilePageCounter);
             newFilePageCounter++;
             
@@ -486,6 +497,7 @@ void SortedDBFile::MergeSortedInputWithFile(){
     }
     
     if (page.getNumRecs() > 0){
+        cout<<page.getNumRecs()<<"Writing Records"<<endl;
         newFile.AddPage(&page,newFilePageCounter);
     }
     
