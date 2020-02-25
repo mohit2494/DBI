@@ -265,13 +265,69 @@ HeapDBFile::~HeapDBFile(){
 /*-----------------------------------------------------------------------------------*/
 SortedDBFile :: SortedDBFile(Preference * preference){
     myPreferencePtr = preference;
+    inputPipePtr = NULL;
+    outputPipePtr = NULL;
+    bigQPtr = NULL;
 }
 void SortedDBFile :: Add(Record &addme){
     cout<<"Add";
+    if (!myFile.IsFileOpen()){
+        cerr << "Trying to load a file which is not open!";
+        exit(1);
+    }
+     // Flush the page data from which you are reading and load the last page to start appending records.
+     if (myPreferencePtr->pageBufferMode == READ ) {
+            if( myPage.getNumRecs() > 0){
+                myPage.EmptyItOut();
+            }
+            // assign new pipe instance for input pipe if null
+
+             if (inputPipePtr == NULL){
+                  inputPipePtr = new Pipe(10);
+             }
+             if(outputPipePtr == NULL){
+                 outputPipePtr = new Pipe(10);
+             }
+             if(bigQPtr == NULL){
+                 new BigQ(*(inputPipePtr), *(outputPipePtr), *(myPreferencePtr->orderMaker), myPreferencePtr->runLength);
+             }
+    }
+
+    // set DBFile in write mode
+    myPreferencePtr->pageBufferMode = WRITE;
+    
+    // add record to input pipe
+    inputPipePtr->Insert(&addme);
+    
+    // set allrecords written as false
+    myPreferencePtr->allRecordsWritten=false;
 }
 void SortedDBFile :: Load(Schema &myschema, const char *loadpath){
     cout<<"Load";
+    if (!myFile.IsFileOpen()){
+          cerr << "Trying to load a file which is not open!";
+          exit(1);
+      }
 
+      Record temp;
+      // Flush the page data from which you are reading and load the last page to start appending records.
+       if (myPreferencePtr->pageBufferMode == READ ) {
+              if( myPage.getNumRecs() > 0){
+                  myPage.EmptyItOut();
+              }
+              // assign new pipe instance for input pipe if null
+               if (inputPipePtr == NULL){
+                    inputPipePtr = new Pipe(10);
+               }
+      }
+    
+      // set DBFile in WRITE Mode
+      myPreferencePtr->pageBufferMode = WRITE;
+      FILE *tableFile = fopen (loadpath, "r");
+      // while there are records, keep adding them to the DBFile. Reuse Add function.
+      while(temp.SuckNextRecord(&myschema, tableFile)==1) {
+          Add(temp);
+      }
 }
 int SortedDBFile :: GetNext(Record &fetchme){
     cout<<"GetNext";
@@ -283,6 +339,51 @@ int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
 }
 int SortedDBFile :: Close(){
     cout<<"Close";
+    if (!myFile.IsFileOpen()) {
+        cout << "trying to close a file which is not open!"<<endl;
+        return 0;
+    }
+    
+    if(myPreferencePtr->pageBufferMode == WRITE && !myPreferencePtr->allRecordsWritten){
+            inputPipePtr->ShutDown();
+            ComparisonEngine ceng;
+            int err = 0;
+            int i = 0;
+            Record rec[2];
+            Record *last = NULL, *prev = NULL;
+            while (outputPipePtr->Remove (&rec[i%2])) {
+                prev = last;
+                last = &rec[i%2];
+                last->Print(new Schema("catalog","customer"));
+                if (prev && last) {
+                    if (ceng.Compare (prev, last, myPreferencePtr->orderMaker) == 1) {
+
+                        err++;
+                    }
+                }
+
+                i++;
+            }
+            cout << " consumer: removed " << i << " recs from the pipe\n";
+            cerr << " consumer: " << (i - err) << " recs out of " << i << " recs in sorted order \n";
+            if (err) {
+                cerr << " consumer: " <<  err << " recs failed sorted order test \n" << endl;
+            }
+            delete inputPipePtr;
+            inputPipePtr = NULL;
+            myPreferencePtr->isPageFull = false;
+            myPreferencePtr->currentPage = myFile.Close();
+            myPreferencePtr->allRecordsWritten = true;
+            myPreferencePtr->currentRecordPosition = myPage.getNumRecs();
+    }
+    else{
+        if(myPreferencePtr->pageBufferMode == READ){
+            myPreferencePtr->currentPage--;
+        }
+        myFile.Close();
+    }
+    return 1;
+    
 }
 SortedDBFile::~SortedDBFile(){
 

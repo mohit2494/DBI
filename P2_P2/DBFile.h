@@ -12,6 +12,8 @@
 #include "File.h"
 #include "Comparison.h"
 #include "ComparisonEngine.h"
+#include "BigQ.h"
+#include "Pipe.h"
 
 typedef enum {heap, sorted, tree,undefined} fType;
 typedef enum {READ, WRITE,IDLE} BufferMode;
@@ -19,7 +21,6 @@ typedef enum {READ, WRITE,IDLE} BufferMode;
 typedef struct {
     OrderMaker *o;
     int l;
-    
 } SortedStartUp;
 
 // class to take care of meta data for each table
@@ -103,6 +104,9 @@ public:
 };
 
 class SortedDBFile: public  GenericDBFile{
+    Pipe * inputPipePtr;
+    Pipe * outputPipePtr;
+    BigQ * bigQPtr;
 public:
     SortedDBFile(Preference * preference);
     ~SortedDBFile();
@@ -133,17 +137,6 @@ public:
 
 	// Function to dumpn the preference to the disk. This is needed to make read and writes persistent.
 	void DumpPreference();
-
-	// Function to get the next page location to write. i.e. if there are 10 pages written this will give the location to write the 11th page.
-	int GetPageLocationToWrite();
-
-	// Function to get the page location from which we need to start the disk read. 
-	// @input : Buffer Mode : Will give different locations according to current state of the DBFile.
-	int GetPageLocationToRead(BufferMode mode);
-
-	// Function to get the same current page location when we want to rewrite data.
-	int GetPageLocationToReWrite();
-
 
 	//  Function to directly load data from the tbl files.
 	/**
