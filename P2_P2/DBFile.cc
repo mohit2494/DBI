@@ -269,29 +269,46 @@ SortedDBFile :: SortedDBFile(Preference * preference){
     outputPipePtr = NULL;
     bigQPtr = NULL;
 }
+SortedDBFile::~SortedDBFile(){
+
+}
 void SortedDBFile :: Add(Record &addme){
-    cout<<"Add";
+    cout<<"Add"<<endl;
     if (!myFile.IsFileOpen()){
         cerr << "Trying to load a file which is not open!";
         exit(1);
     }
+    
+    
+    // assign new pipe instance for input pipe if null
+         if (inputPipePtr == NULL){
+              inputPipePtr = new Pipe(10);
+         }
+         if(outputPipePtr == NULL){
+             outputPipePtr = new Pipe(10);
+         }
+         if(bigQPtr == NULL){
+            bigQPtr =  new BigQ(*(inputPipePtr), *(outputPipePtr), *(myPreferencePtr->orderMaker), myPreferencePtr->runLength);
+         }
+     
+    
      // Flush the page data from which you are reading and load the last page to start appending records.
      if (myPreferencePtr->pageBufferMode == READ ) {
             if( myPage.getNumRecs() > 0){
                 myPage.EmptyItOut();
             }
-            // assign new pipe instance for input pipe if null
-
-             if (inputPipePtr == NULL){
-                  inputPipePtr = new Pipe(10);
-             }
-             if(outputPipePtr == NULL){
-                 outputPipePtr = new Pipe(10);
-             }
-             if(bigQPtr == NULL){
-                 new BigQ(*(inputPipePtr), *(outputPipePtr), *(myPreferencePtr->orderMaker), myPreferencePtr->runLength);
-             }
+         // assign new pipe instance for input pipe if null
+         if (inputPipePtr == NULL){
+              inputPipePtr = new Pipe(10);
+         }
+         if(outputPipePtr == NULL){
+             outputPipePtr = new Pipe(10);
+         }
+         if(bigQPtr == NULL){
+            bigQPtr =  new BigQ(*(inputPipePtr), *(outputPipePtr), *(myPreferencePtr->orderMaker), myPreferencePtr->runLength);
+         }
     }
+    
 
     // set DBFile in write mode
     myPreferencePtr->pageBufferMode = WRITE;
@@ -303,7 +320,7 @@ void SortedDBFile :: Add(Record &addme){
     myPreferencePtr->allRecordsWritten=false;
 }
 void SortedDBFile :: Load(Schema &myschema, const char *loadpath){
-    cout<<"Load";
+    cout<<"Load"<<endl;
     if (!myFile.IsFileOpen()){
           cerr << "Trying to load a file which is not open!";
           exit(1);
@@ -330,47 +347,44 @@ void SortedDBFile :: Load(Schema &myschema, const char *loadpath){
       }
 }
 int SortedDBFile :: GetNext(Record &fetchme){
-    cout<<"GetNext";
-
+    if (myFile.IsFileOpen()){
+        // Flush the Page Buffer if the WRITE mode was active.
+        if(myPreferencePtr->pageBufferMode == WRITE && !myPreferencePtr->allRecordsWritten){
+                   MergeSortedInputWithFile();
+        }
+        myPreferencePtr->pageBufferMode = READ;
+        // loop till the page is empty and if empty load the next page to read
+        if (!myPage.GetFirst(&fetchme)) {
+            // check if all records are read.
+            if (myPreferencePtr->currentPage+1 >= myFile.GetLength()){
+               return 0;
+            }
+            else{
+                // load new page and get its first record.
+                myFile.GetPage(&myPage,GetPageLocationToRead(myPreferencePtr->pageBufferMode));
+                myPage.GetFirst(&fetchme);
+                myPreferencePtr->currentPage++;
+                myPreferencePtr->currentRecordPosition = 0;
+            }
+        }
+        // increament counter for each read.
+        myPreferencePtr->currentRecordPosition++;
+        return 1;
+    }
 }
 int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
-    cout<<"GetNext CNF";
+    cout<<"GetNext CNF"<<endl;
 
 }
 int SortedDBFile :: Close(){
-    cout<<"Close";
+    cout<<"Close"<<endl;
     if (!myFile.IsFileOpen()) {
         cout << "trying to close a file which is not open!"<<endl;
         return 0;
     }
     
     if(myPreferencePtr->pageBufferMode == WRITE && !myPreferencePtr->allRecordsWritten){
-            inputPipePtr->ShutDown();
-            ComparisonEngine ceng;
-            int err = 0;
-            int i = 0;
-            Record rec[2];
-            Record *last = NULL, *prev = NULL;
-            while (outputPipePtr->Remove (&rec[i%2])) {
-                prev = last;
-                last = &rec[i%2];
-                last->Print(new Schema("catalog","customer"));
-                if (prev && last) {
-                    if (ceng.Compare (prev, last, myPreferencePtr->orderMaker) == 1) {
-
-                        err++;
-                    }
-                }
-
-                i++;
-            }
-            cout << " consumer: removed " << i << " recs from the pipe\n";
-            cerr << " consumer: " << (i - err) << " recs out of " << i << " recs in sorted order \n";
-            if (err) {
-                cerr << " consumer: " <<  err << " recs failed sorted order test \n" << endl;
-            }
-            delete inputPipePtr;
-            inputPipePtr = NULL;
+            MergeSortedInputWithFile();
             myPreferencePtr->isPageFull = false;
             myPreferencePtr->currentPage = myFile.Close();
             myPreferencePtr->allRecordsWritten = true;
@@ -385,8 +399,116 @@ int SortedDBFile :: Close(){
     return 1;
     
 }
-SortedDBFile::~SortedDBFile(){
+void SortedDBFile::MergeSortedInputWithFile(){
+    // setup for new file
+    string fileName(myPreferencePtr->preferenceFilePath);
+    string newFileName = fileName.substr(0,fileName.find_last_of('.'))+".nbin";
+    char* new_f_path = new char[newFileName.length()+1];
+    strcpy(new_f_path, newFileName.c_str());
+    newFile.Open(0,new_f_path);
+    Page page;
+    int newFilePageCounter = 0;
+    
+    // shut down input pipe;
+    inputPipePtr->ShutDown();
+    
+    // flush the read buffer
+    if(myPage.getNumRecs() > 0){
+        myPage.EmptyItOut();
+    }
+    
+    // page counts;
+    int totalPages = myFile.GetLength()-1;
+    int currentPage = 0;
+    // set flags to initiate merge
+    bool fileReadFlag = true;
+    bool outputPipeReadFlag = true;
+    
+    while(fileReadFlag || outputPipeReadFlag){
+        Record fileRecord;
+        Record outputPipeRecord;
+        if(!outputPipePtr->Remove(&outputPipeRecord)){
+            outputPipeReadFlag= false;
+        }
+        if(outputPipeReadFlag){
+            outputPipeRecord.Print(new Schema("catalog","nation"));
+        }
+        
+        if(!myPage.GetFirst(&fileRecord)){
+            if(currentPage<totalPages){
+                myFile.GetPage(&myPage,currentPage);
+                currentPage++;
+            }
+            else{
+                fileReadFlag= false;
+            }
+        }
+        if(fileReadFlag){
+            fileRecord.Print(new Schema("catalog","nation"));
+        }
+        
+        // select record to be written
+        Record writeRecord;
+        bool consumeFlag = false;
+        if(fileReadFlag and outputPipeReadFlag){
+            if (myCompEng.Compare(&fileRecord,&outputPipeRecord,myPreferencePtr->orderMaker)<=0){
+                writeRecord.Consume(&fileRecord);
+                consumeFlag=true;
+            }
+            else{
+                writeRecord.Consume(&outputPipeRecord);
+                consumeFlag=true;
+            }
+        }
+        else if (fileReadFlag){
+            writeRecord.Consume(&fileRecord);
+            consumeFlag=true;
 
+        }
+        else if (outputPipeReadFlag){
+            writeRecord.Consume(&outputPipeRecord);
+            consumeFlag=true;
+        }
+        
+        
+        if(consumeFlag && !page.Append(&writeRecord)) {
+            // Add the page to new File
+            newFile.AddPage(&page,newFilePageCounter);
+            newFilePageCounter++;
+            
+            // empty page if not consumed
+            if(page.getNumRecs() > 0){
+                page.EmptyItOut();
+            }
+            // add again to page
+            page.Append(&writeRecord);
+        }
+    }
+    
+    if (page.getNumRecs() > 0){
+        newFile.AddPage(&page,newFilePageCounter);
+    }
+    
+    delete inputPipePtr;
+    delete outputPipePtr;
+    delete bigQPtr;
+    inputPipePtr = NULL;
+    outputPipePtr = NULL;
+    bigQPtr = NULL;
+    
+    myFile.Close();
+    newFile.Close();
+    
+    string oldFileName = fileName.substr(0,fileName.find_last_of('.'))+".bin";
+    char* old_f_path = new char[oldFileName.length()+1];
+    strcpy(old_f_path, oldFileName.c_str());
+    
+    if(Utilities::checkfileExist(old_f_path)) {
+        if( remove(old_f_path) != 0 )
+        cerr<< "Error deleting file" ;
+    }
+    rename(new_f_path,old_f_path);
+    myFile.Open(1,old_f_path);
 }
 /*-----------------------------------------------------------------------------------*/
 
@@ -518,7 +640,9 @@ void DBFile::LoadPreference(char * newFilePath,fType f_type) {
         file.read((char*)&myPreference,sizeof(Preference));
         myPreference.preferenceFilePath = (char*)malloc(strlen(newFilePath) + 1);
         strcpy(myPreference.preferenceFilePath,newFilePath);
-        myPreference.orderMaker = (OrderMaker *)(&myPreference.orderMakerBits);
+        
+        myPreference.orderMaker = new OrderMaker();
+        file.read((char*)myPreference.orderMaker,sizeof(OrderMaker));
     }
     else {
         myPreference.f_type = f_type;
@@ -542,7 +666,7 @@ void DBFile::DumpPreference(){
         cerr<<"Error in opening file for writing.."<<endl;
         exit(1);
     }
-    strncpy(myPreference.orderMakerBits,(char*)myPreference.orderMaker,sizeof(OrderMaker));
     file.write((char*)&myPreference,sizeof(Preference));
+    file.write((char*)myPreference.orderMaker,sizeof(OrderMaker));
     file.close();
 }

@@ -107,6 +107,8 @@ class SortedDBFile: public  GenericDBFile{
     Pipe * inputPipePtr;
     Pipe * outputPipePtr;
     BigQ * bigQPtr;
+    File newFile;
+    Page outputBufferForNewFile;
 public:
     SortedDBFile(Preference * preference);
     ~SortedDBFile();
@@ -115,6 +117,7 @@ public:
     int GetNext (Record &fetchme);
     int GetNext (Record &fetchme, CNF &cnf, Record &literal);
     int Close ();
+    void MergeSortedInputWithFile();
 };
 
 
