@@ -6,8 +6,6 @@ void test2 ();
 void test3 ();
 
 int add_data (FILE *src, int numrecs, int &res) {
-    cout<<"add_data numrecs:"<<numrecs<<endl;
-    cout<<"add_data res:"<<res<<endl;
 	DBFile dbfile;
 	dbfile.Open (rel->path ());
 	Record temp;
@@ -21,7 +19,6 @@ int add_data (FILE *src, int numrecs, int &res) {
 	}
 
 	dbfile.Close ();
-    cout<<"Proc"<<proc<<endl;
 	return proc;
 }
 

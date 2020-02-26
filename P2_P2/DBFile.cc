@@ -428,14 +428,19 @@ void SortedDBFile::MergeSortedInputWithFile(){
     bool getNextOutputPipeRecord = true;
     Record * fileRecordptr = NULL;
     Record * outputPipeRecordPtr = NULL;
+//    int count =1;
     while(fileReadFlag || outputPipeReadFlag){
         if (getNextOutputPipeRecord){
             outputPipeRecordPtr = new Record();
             getNextOutputPipeRecord = false;
             if(!outputPipePtr->Remove(outputPipeRecordPtr)){
-                cout<<"outputPipePtr over"<<endl;
+//                cout<<"outputPipePtr over"<<endl;
                 outputPipeReadFlag= false;
             }
+//            else{
+//                cout<<"outputPipePtr"<<count<<endl;
+//                count++;
+//            }
         }
         
         if (getNextFileRecord){
@@ -451,39 +456,47 @@ void SortedDBFile::MergeSortedInputWithFile(){
                     fileReadFlag= false;
                 }
             }
+//            else{
+//                cout<<"fileRecordptr"<<count<<endl;
+//                count++;
+//            }
         }
         
         // select record to be written
-        Record writeRecord;
+        Record * writeRecordPtr;
         bool consumeFlag = false;
         if(fileReadFlag and outputPipeReadFlag){
             if (myCompEng.Compare(fileRecordptr,outputPipeRecordPtr,myPreferencePtr->orderMaker)<=0){
-                writeRecord.Consume(fileRecordptr);
+                writeRecordPtr = fileRecordptr;
+                fileRecordptr=NULL;
                 consumeFlag=true;
                 getNextFileRecord=true;
             }
             else{
-                writeRecord.Consume(outputPipeRecordPtr);
+                writeRecordPtr = outputPipeRecordPtr;
+                outputPipeRecordPtr=NULL;
                 consumeFlag=true;
                 getNextOutputPipeRecord=true;
             }
         }
         else if (fileReadFlag){
-            writeRecord.Consume(fileRecordptr);
+            writeRecordPtr = fileRecordptr;
+            fileRecordptr=NULL;
             consumeFlag=true;
             getNextFileRecord=true;
 
         }
         else if (outputPipeReadFlag){
-            writeRecord.Consume(outputPipeRecordPtr);
+            writeRecordPtr = outputPipeRecordPtr;
+            outputPipeRecordPtr=NULL;
             consumeFlag=true;
             getNextOutputPipeRecord=true;
         }
         
         
-        if(consumeFlag && !page.Append(&writeRecord)) {
+        if(consumeFlag && !page.Append(writeRecordPtr)) {
             // Add the page to new File
-            cout<<page.getNumRecs()<<"Writing Records"<<endl;
+//            cout<<page.getNumRecs()<<"Writing Records"<<endl;
             newFile.AddPage(&page,newFilePageCounter);
             newFilePageCounter++;
             
@@ -492,12 +505,16 @@ void SortedDBFile::MergeSortedInputWithFile(){
                 page.EmptyItOut();
             }
             // add again to page
-            page.Append(&writeRecord);
+            page.Append(writeRecordPtr);
+            cout<<page.getNumRecs();
+        }
+        if(writeRecordPtr!=NULL){
+            delete writeRecordPtr;
         }
     }
     
     if (page.getNumRecs() > 0){
-        cout<<page.getNumRecs()<<"Writing Records"<<endl;
+//        cout<<page.getNumRecs()<<"Writing Records"<<endl;
         newFile.AddPage(&page,newFilePageCounter);
     }
     
