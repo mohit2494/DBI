@@ -421,15 +421,18 @@ int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
         myPreferencePtr->pageBufferMode = READ;
         
         // read the current page for simplicity.
-        off_t startPage = myPreferencePtr->currentPage;
+        off_t startPage = !myPreferencePtr->currentPage?0:myPreferencePtr->currentPage-1;
         // loop till the current page is fully read and checked record by record. Once the current page changes or the file ends break from the loop
-        while(startPage == myPreferencePtr->currentPage and GetNext(fetchme)){
+        while(GetNext(fetchme)){
+            if (startPage != myPreferencePtr->currentPage-1){
+                break;
+            }
             if(myCompEng.Compare(&fetchme, &literal, &cnf)){
                 return 1;
             }
         }
-        
-        startPage = myPreferencePtr->currentPage;
+        // has the value of the next page
+        startPage = myPreferencePtr->currentPage-1;
         
         if(doBinarySearch){
             // fetch the queryOrderMaker using the cnf given and the sort ordermaker stored in the preference.
@@ -440,7 +443,7 @@ int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
                 off_t endPage = myFile.GetLength()-1;
                 int retstatus;
                 if(endPage > 1){
-                    retstatus = BinarySearch(fetchme,literal,startPage, endPage);
+                    retstatus = BinarySearch(fetchme,literal,startPage,endPage);
                 }
                 else{
                     retstatus = GetNext(fetchme);
@@ -495,13 +498,13 @@ int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
             //spcal case
             if(brkflag==true)
             {
-                myFile.GetPage(prevPage,gobackpage);
-                GoBackPageptr->GetFirst(&fetchme);
+                myFile.GetPage(&prevPage,previousPage);
+                prevPage.GetFirst(&fetchme);
                 if(myCompEng.Compare (&fetchme, &literal, &cnf))
                 {
                     myPage.EmptyItOut();
                     char *bits = new (std::nothrow) char[PAGE_SIZE];
-                    GoBackPageptr->ToBinary (bits);
+                    prevPage.ToBinary (bits);
                     myPage.FromBinary(bits);
                     return 1;
                 }
@@ -694,8 +697,6 @@ void SortedDBFile::MergeSortedInputWithFile(){
     
     //opening the new file.
     myFile.Open(1,old_f_path);
-    // All set to start reading.
-    MoveFirst();
 }
 
 int SortedDBFile::BinarySearch(Record &fetchme, Record &literal,off_t low, off_t high){
@@ -706,11 +707,12 @@ int SortedDBFile::BinarySearch(Record &fetchme, Record &literal,off_t low, off_t
            else
                   myFile.GetPage(&myPage,0);
            myPage.GetFirst(&fetchme);
+           fetchme.Print(new Schema("catalog","customer"));
            int comparisonResult = myCompEng.Compare(&literal, queryOrderMaker, &fetchme, myPreferencePtr->orderMaker);
 
            // Executing search based on the result.
            if (comparisonResult == 0 ){
-               myPreferencePtr->currentPage = mid-1;
+               myPreferencePtr->currentPage = mid;
                return 1;
            }
            else if (comparisonResult<0){
@@ -723,12 +725,17 @@ int SortedDBFile::BinarySearch(Record &fetchme, Record &literal,off_t low, off_t
            //with literal >key)then there is no record matching so return 0;
            if (comparisonResult > 0){
                 while(myPage.GetFirst(&fetchme)){
+                    fetchme.Print(new Schema("catalog","customer"));
                     int comparisonResultInsidePage = myCompEng.Compare(&literal, queryOrderMaker,&fetchme, myPreferencePtr->orderMaker);
                     if(comparisonResultInsidePage<0){
+                        cout<<"return 0";
+                        cout<<myPage.getNumRecs()<<endl;
                         return 0;
                     }
                     else if(comparisonResultInsidePage == 0 ){
-                        myPreferencePtr->currentPage = mid-1;
+                        myPreferencePtr->currentPage = mid;
+                        cout<<"return 1"<<endl;
+                        cout<<myPage.getNumRecs()<<endl;
                         return 1;
                     }
                 }
@@ -869,9 +876,11 @@ void DBFile::LoadPreference(char * newFilePath,fType f_type) {
         file.read((char*)&myPreference,sizeof(Preference));
         myPreference.preferenceFilePath = (char*)malloc(strlen(newFilePath) + 1);
         strcpy(myPreference.preferenceFilePath,newFilePath);
-        
+        if (myPreference.f_type == sorted){
+
         myPreference.orderMaker = new OrderMaker();
         file.read((char*)myPreference.orderMaker,sizeof(OrderMaker));
+        }
     }
     else {
         myPreference.f_type = f_type;
@@ -896,7 +905,9 @@ void DBFile::DumpPreference(){
         exit(1);
     }
     file.write((char*)&myPreference,sizeof(Preference));
-    file.write((char*)myPreference.orderMaker,sizeof(OrderMaker));
+    if (myPreference.f_type == sorted){
+        file.write((char*)myPreference.orderMaker,sizeof(OrderMaker));
+    }
     file.close();
 }
 

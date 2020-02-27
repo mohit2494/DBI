@@ -675,8 +675,6 @@ OrderMaker* CNF::PrepareCnfQueryOrderMaker(OrderMaker &srtorder){
     OrderMaker cnf_order;
     OrderMaker sortOrderCopy = srtorder;
     GetCNFSortOrders(cnf_order, sortOrderCopy);
-    cnf_order.Print();
-    sortOrderCopy.Print();
     OrderMaker *query = new OrderMaker();
     for (int i = 0; i < srtorder.numAtts; i++)
     {
