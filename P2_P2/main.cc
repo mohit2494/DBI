@@ -17,7 +17,6 @@ int add_data (FILE *src, int numrecs, int &res) {
         if (proc == xx) cerr << "\t ";
         if (proc % xx == 0) cerr << ".";
     }
-
     dbfile.Close ();
     return proc;
 }
@@ -60,7 +59,7 @@ void test1 () {
             cout << " \t 2. add a lot (1k to 1e+06 recs) \n";
             cout << " \t 3. run some query \n \t ";
             cin >> x;
-            x=1;
+            x=2;
         }
         if (x < 3) {
             proc = add_data (tblfile,lrand48()%(int)pow(1e3,x)+(x-1)*1000, res);

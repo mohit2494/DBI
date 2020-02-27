@@ -2,9 +2,12 @@
 #include "Utilities.h"
 
 /*-----------------------------------------------------------------------------------*/
+//                   GENERIC DBFILE CLASS FUNCTION DEFINATION
+/*-----------------------------------------------------------------------------------*/
 GenericDBFile::GenericDBFile(){
     
 }
+
 GenericDBFile::~GenericDBFile(){
 
 }
@@ -59,7 +62,33 @@ int GenericDBFile::Open(char * f_path){
     return 0;
 }
 
-void GenericDBFile::MoveFirst () {
+void GenericDBFile::MoveFirst () {}
+
+void GenericDBFile::Add(Record &addme){}
+
+void GenericDBFile::Load(Schema &myschema, const char *loadpath){}
+
+int GenericDBFile::GetNext(Record &fetchme){}
+
+int GenericDBFile::GetNext(Record &fetchme, CNF &cnf, Record &literal){}
+
+int GenericDBFile::Close(){}
+
+/*-----------------------------------END--------------------------------------------*/
+
+
+/*-----------------------------------------------------------------------------------*/
+//                   HEAP DBFILE CLASS FUNCTION DEFINATION
+/*-----------------------------------------------------------------------------------*/
+HeapDBFile :: HeapDBFile(Preference * preference){
+    myPreferencePtr = preference;
+}
+
+HeapDBFile::~HeapDBFile(){
+
+}
+
+void HeapDBFile::MoveFirst () {
     if (myFile.IsFileOpen()){
         if (myPreferencePtr->pageBufferMode == WRITE && myPage.getNumRecs() > 0){
             if(!myPreferencePtr->allRecordsWritten){
@@ -72,19 +101,6 @@ void GenericDBFile::MoveFirst () {
         myPreferencePtr->currentPage = 0;
         myPreferencePtr->currentRecordPosition = 0;
     }
-}
-
-void GenericDBFile::Add(Record &addme){}
-void GenericDBFile::Load(Schema &myschema, const char *loadpath){}
-int GenericDBFile::GetNext(Record &fetchme){}
-int GenericDBFile::GetNext(Record &fetchme, CNF &cnf, Record &literal){}
-int GenericDBFile::Close(){}
-
-/*-----------------------------------------------------------------------------------*/
-
-/*-----------------------------------------------------------------------------------*/
-HeapDBFile :: HeapDBFile(Preference * preference){
-    myPreferencePtr = preference;
 }
 
 void HeapDBFile :: Add (Record &rec) {
@@ -256,24 +272,43 @@ int HeapDBFile :: Close () {
     return 1;
 }
 
-HeapDBFile::~HeapDBFile(){
+/*-----------------------------------END--------------------------------------------*/
 
-}
 
 /*-----------------------------------------------------------------------------------*/
-
+//                   SORTED DBFILE CLASS FUNCTION DEFINATION
 /*-----------------------------------------------------------------------------------*/
 SortedDBFile :: SortedDBFile(Preference * preference){
     myPreferencePtr = preference;
     inputPipePtr = NULL;
     outputPipePtr = NULL;
     bigQPtr = NULL;
+    queryOrderMaker= NULL;
+    doBinarySearch=true;
 }
+
 SortedDBFile::~SortedDBFile(){
 
 }
+
+void SortedDBFile::MoveFirst () {
+    if (myFile.IsFileOpen()){
+         // Flush the Page Buffer if the WRITE mode was active.
+        if(myPreferencePtr->pageBufferMode == WRITE && !myPreferencePtr->allRecordsWritten){
+                  MergeSortedInputWithFile();
+        }
+        if( myPage.getNumRecs() > 0){
+            myPage.EmptyItOut();
+        }
+        myPreferencePtr->pageBufferMode = READ;
+        myFile.MoveToFirst();
+        myPreferencePtr->currentPage = 0;
+        myPreferencePtr->currentRecordPosition = 0;
+        doBinarySearch=true;
+    }
+}
+
 void SortedDBFile :: Add(Record &addme){
-//    cout<<"Add"<<endl;
     if (!myFile.IsFileOpen()){
         cerr << "Trying to load a file which is not open!";
         exit(1);
@@ -319,8 +354,8 @@ void SortedDBFile :: Add(Record &addme){
     // set allrecords written as false
     myPreferencePtr->allRecordsWritten=false;
 }
+
 void SortedDBFile :: Load(Schema &myschema, const char *loadpath){
-    cout<<"Load"<<endl;
     if (!myFile.IsFileOpen()){
           cerr << "Trying to load a file which is not open!";
           exit(1);
@@ -346,6 +381,7 @@ void SortedDBFile :: Load(Schema &myschema, const char *loadpath){
           Add(temp);
       }
 }
+
 int SortedDBFile :: GetNext(Record &fetchme){
     if (myFile.IsFileOpen()){
         // Flush the Page Buffer if the WRITE mode was active.
@@ -372,12 +408,127 @@ int SortedDBFile :: GetNext(Record &fetchme){
         return 1;
     }
 }
-int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
-    cout<<"GetNext CNF"<<endl;
 
+int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
+    
+    if (myFile.IsFileOpen()){
+        // Flush the Page Buffer if the WRITE mode was active.
+        if(myPreferencePtr->pageBufferMode == WRITE && !myPreferencePtr->allRecordsWritten){
+            MergeSortedInputWithFile();
+        }
+        
+        // set page mode to READ
+        myPreferencePtr->pageBufferMode = READ;
+        
+        // read the current page for simplicity.
+        off_t startPage = myPreferencePtr->currentPage;
+        // loop till the current page is fully read and checked record by record. Once the current page changes or the file ends break from the loop
+        while(startPage == myPreferencePtr->currentPage and GetNext(fetchme)){
+            if(myCompEng.Compare(&fetchme, &literal, &cnf)){
+                return 1;
+            }
+        }
+        
+        startPage = myPreferencePtr->currentPage;
+        
+        if(doBinarySearch){
+            // fetch the queryOrderMaker using the cnf given and the sort ordermaker stored in the preference.
+            queryOrderMaker= cnf.PrepareCnfQueryOrderMaker(*myPreferencePtr->orderMaker);
+            
+            // if the queryOrderMaker is available do a binary search to find the first matching record which is equal to literal using queryOrderMaker.
+            if(queryOrderMaker!=NULL){
+                off_t endPage = myFile.GetLength()-1;
+                int retstatus;
+                if(endPage > 1){
+                    retstatus = BinarySearch(fetchme,literal,startPage, endPage);
+                }
+                else{
+                    retstatus = GetNext(fetchme);
+                }
+                if(retstatus){
+                    doBinarySearch = false;
+                    if(myCompEng.Compare(&fetchme, &literal, &cnf))
+                        return 1;
+                }
+            }
+            else
+            {
+                doBinarySearch = false;
+            }
+            
+            //Go Back from the Page where u found a match.
+            int previousPage = myPreferencePtr->currentPage-1;
+            Page prevPage;
+            
+            bool brkflag=false;
+            while(previousPage>=startPage && queryOrderMaker!=NULL)
+            {
+                
+                myFile.GetPage(&prevPage,previousPage-1);
+                
+                prevPage.GetFirst(&fetchme);
+                
+                if(myCompEng.Compare(&literal, queryOrderMaker, &fetchme, myPreferencePtr->orderMaker))
+                {
+                    previousPage--;
+                }
+                else
+                {
+                    while(prevPage.GetFirst(&fetchme))
+                    {
+                        if(myCompEng.Compare (&fetchme, &literal, &cnf))
+                        {
+                            char *bits = new (std::nothrow) char[PAGE_SIZE];
+                            myPage.EmptyItOut();
+                            prevPage.ToBinary (bits);
+                            myPage.FromBinary(bits);
+                            return 1;
+                        }
+                    }
+                    brkflag=true;
+                }
+                if(brkflag)
+                {
+                    break;
+                }
+            }
+            //spcal case
+            if(brkflag==true)
+            {
+                myFile.GetPage(prevPage,gobackpage);
+                GoBackPageptr->GetFirst(&fetchme);
+                if(myCompEng.Compare (&fetchme, &literal, &cnf))
+                {
+                    myPage.EmptyItOut();
+                    char *bits = new (std::nothrow) char[PAGE_SIZE];
+                    GoBackPageptr->ToBinary (bits);
+                    myPage.FromBinary(bits);
+                    return 1;
+                }
+            }
+            
+        }
+        
+        // Doing a linear Scan from the Record from where the seach stopped.
+        while (GetNext(fetchme))
+        {
+            // if queryOrderMaker exists and the literal is smaller than the fetched record stop the seach as all other records are greter incase of the search.
+            if (queryOrderMaker!=NULL && myCompEng.Compare(&literal,queryOrderMaker,&fetchme, myPreferencePtr->orderMaker) < 0){
+                return 0;
+            }
+            // if the record passes the CNF compare return.
+            if(myCompEng.Compare (&fetchme, &literal, &cnf))
+            {
+                return 1;
+            }
+        }
+        // if nothing matches and we read all the file.
+        return 0;
+            
+    }
 }
+
 int SortedDBFile :: Close(){
-//    cout<<"Close"<<endl;
     if (!myFile.IsFileOpen()) {
         cout << "trying to close a file which is not open!"<<endl;
         return 0;
@@ -399,12 +550,15 @@ int SortedDBFile :: Close(){
     return 1;
     
 }
+
 void SortedDBFile::MergeSortedInputWithFile(){
     // setup for new file
     string fileName(myPreferencePtr->preferenceFilePath);
     string newFileName = fileName.substr(0,fileName.find_last_of('.'))+".nbin";
     char* new_f_path = new char[newFileName.length()+1];
     strcpy(new_f_path, newFileName.c_str());
+    
+    // open new file in which the data will be written.
     newFile.Open(0,new_f_path);
     Page page;
     int newFilePageCounter = 0;
@@ -424,23 +578,22 @@ void SortedDBFile::MergeSortedInputWithFile(){
     bool fileReadFlag = true;
     bool outputPipeReadFlag = true;
     
+    
+    // merge data from file and output pipe
     bool getNextFileRecord = true;
     bool getNextOutputPipeRecord = true;
     Record * fileRecordptr = NULL;
     Record * outputPipeRecordPtr = NULL;
-//    int count =1;
+    
+    // loop until data is there in either the pipe or file.
     while(fileReadFlag || outputPipeReadFlag){
+        
         if (getNextOutputPipeRecord){
             outputPipeRecordPtr = new Record();
             getNextOutputPipeRecord = false;
             if(!outputPipePtr->Remove(outputPipeRecordPtr)){
-//                cout<<"outputPipePtr over"<<endl;
                 outputPipeReadFlag= false;
             }
-//            else{
-//                cout<<"outputPipePtr"<<count<<endl;
-//                count++;
-//            }
         }
         
         if (getNextFileRecord){
@@ -456,10 +609,6 @@ void SortedDBFile::MergeSortedInputWithFile(){
                     fileReadFlag= false;
                 }
             }
-//            else{
-//                cout<<"fileRecordptr"<<count<<endl;
-//                count++;
-//            }
         }
         
         // select record to be written
@@ -496,7 +645,6 @@ void SortedDBFile::MergeSortedInputWithFile(){
         
         if(consumeFlag && !page.Append(writeRecordPtr)) {
             // Add the page to new File
-//            cout<<page.getNumRecs()<<"Writing Records"<<endl;
             newFile.AddPage(&page,newFilePageCounter);
             newFilePageCounter++;
             
@@ -506,18 +654,21 @@ void SortedDBFile::MergeSortedInputWithFile(){
             }
             // add again to page
             page.Append(writeRecordPtr);
-            cout<<page.getNumRecs();
         }
         if(writeRecordPtr!=NULL){
             delete writeRecordPtr;
         }
     }
     
+    // write the last page which might not be full.
     if (page.getNumRecs() > 0){
-//        cout<<page.getNumRecs()<<"Writing Records"<<endl;
         newFile.AddPage(&page,newFilePageCounter);
     }
     
+    // set that all records in the input pipe buffer are written
+    myPreferencePtr->allRecordsWritten=true;
+    
+    // clean up the input pipe, output pipe and bigQ after use.
     delete inputPipePtr;
     delete outputPipePtr;
     delete bigQPtr;
@@ -525,6 +676,7 @@ void SortedDBFile::MergeSortedInputWithFile(){
     outputPipePtr = NULL;
     bigQPtr = NULL;
     
+    // close the files and swap the files
     myFile.Close();
     newFile.Close();
     
@@ -532,19 +684,70 @@ void SortedDBFile::MergeSortedInputWithFile(){
     char* old_f_path = new char[oldFileName.length()+1];
     strcpy(old_f_path, oldFileName.c_str());
     
+    // deleting old file
     if(Utilities::checkfileExist(old_f_path)) {
         if( remove(old_f_path) != 0 )
         cerr<< "Error deleting file" ;
     }
+    // renaming new file to old file.
     rename(new_f_path,old_f_path);
+    
+    //opening the new file.
     myFile.Open(1,old_f_path);
+    // All set to start reading.
+    MoveFirst();
 }
+
+int SortedDBFile::BinarySearch(Record &fetchme, Record &literal,off_t low, off_t high){
+    off_t mid = low + (high - low)/2;
+    while(low <= high){
+           if(mid != 0)
+                  myFile.GetPage(&myPage,mid-1);
+           else
+                  myFile.GetPage(&myPage,0);
+           myPage.GetFirst(&fetchme);
+           int comparisonResult = myCompEng.Compare(&literal, queryOrderMaker, &fetchme, myPreferencePtr->orderMaker);
+
+           // Executing search based on the result.
+           if (comparisonResult == 0 ){
+               myPreferencePtr->currentPage = mid-1;
+               return 1;
+           }
+           else if (comparisonResult<0){
+               high = mid - 1;
+           }
+           //if literal is greater than the first record in the page search for the bottom half.
+           //scan the entire page for the possible match
+           // -- if u reach the end of page.. search for the bottom half.
+           //-- if in a page u reached a place where value of literal < the key(where u have started
+           //with literal >key)then there is no record matching so return 0;
+           if (comparisonResult > 0){
+                while(myPage.GetFirst(&fetchme)){
+                    int comparisonResultInsidePage = myCompEng.Compare(&literal, queryOrderMaker,&fetchme, myPreferencePtr->orderMaker);
+                    if(comparisonResultInsidePage<0){
+                        return 0;
+                    }
+                    else if(comparisonResultInsidePage == 0 ){
+                        myPreferencePtr->currentPage = mid-1;
+                        return 1;
+                    }
+                }
+                low = mid+1;
+           }
+          // calculate new mid using new low and high
+           mid = low+(high - low)/2;
+       }
+       return 0;
+}
+
+/*-----------------------------------END--------------------------------------------*/
+
+
+
+/*-----------------------------------------------------------------------------------*/
+//                   DBFILE CLASS FUNCTION DEFINATION
 /*-----------------------------------------------------------------------------------*/
 
-
-/*-----------------------------------------------------------------------------------*/
-
-// stub file .. replace it with your own DBFile.cc
 DBFile::DBFile () {
     myFilePtr = NULL;
 }
@@ -580,7 +783,6 @@ int DBFile::Create (const char *f_path, fType f_type, void *startup) {
     }
     return 0;
 }
-
 
 int DBFile::Open (const char *f_path) {
 
@@ -623,7 +825,6 @@ void DBFile::Load (Schema &f_schema, const char *loadpath) {
     }
 }
 
-
 void DBFile::MoveFirst () {
     if (myFilePtr!=NULL){
            myFilePtr->MoveFirst();
@@ -642,7 +843,6 @@ int DBFile::Close () {
         };
     }
 }
-
 
 int DBFile::GetNext (Record &fetchme) {
     if (myFilePtr != NULL){
@@ -699,3 +899,5 @@ void DBFile::DumpPreference(){
     file.write((char*)myPreference.orderMaker,sizeof(OrderMaker));
     file.close();
 }
+
+/*-----------------------------------END--------------------------------------------*/

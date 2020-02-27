@@ -80,10 +80,10 @@ public:
     int GetPageLocationToReWrite();
     void Create (char * f_path,fType f_type, void *startup);
     int Open (char * f_path);
-    void MoveFirst ();
     
     //  virtual function
     virtual ~GenericDBFile();
+    virtual void MoveFirst ();
     virtual void Add (Record &addme);
     virtual void Load (Schema &myschema, const char *loadpath);
     virtual int GetNext (Record &fetchme);
@@ -95,6 +95,7 @@ class HeapDBFile: public virtual GenericDBFile{
 public:
     HeapDBFile(Preference * preference);
     ~HeapDBFile();
+    void MoveFirst ();
     void Add (Record &addme);
     void Load (Schema &myschema, const char *loadpath);
     int GetNext (Record &fetchme);
@@ -109,15 +110,20 @@ class SortedDBFile: public  GenericDBFile{
     BigQ * bigQPtr;
     File newFile;
     Page outputBufferForNewFile;
+    OrderMaker * queryOrderMaker;
+    bool doBinarySearch;
+    
 public:
     SortedDBFile(Preference * preference);
     ~SortedDBFile();
+    void MoveFirst ();
     void Add (Record &addme);
     void Load (Schema &myschema, const char *loadpath);
     int GetNext (Record &fetchme);
     int GetNext (Record &fetchme, CNF &cnf, Record &literal);
     int Close ();
     void MergeSortedInputWithFile();
+    int BinarySearch(Record &fetchme, Record &literal,off_t low, off_t high);
 };
 
 

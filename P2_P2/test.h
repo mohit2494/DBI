@@ -69,7 +69,11 @@ public:
 		CNF sort_pred;
 		sort_pred.GrowFromParseTree (final, schema (), literal); // constructs CNF predicate
 		OrderMaker dummy;
+        dummy.Print();
+        sortorder.Print();
 		sort_pred.GetSortOrders (sortorder, dummy);
+        sortorder.Print();
+
 	}
 };
 
