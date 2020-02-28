@@ -72,6 +72,7 @@ clean:
 	rm -f y.tab.h
 	rm -f *.xbin
 	rm -f dbfiles/*.bin
+	rm -f dbfiles/*.nbin
 	rm -f dbfiles/*.bigq
 	rm -f dbfiles/*.pref
 	rm -f output1.txt
