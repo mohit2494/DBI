@@ -1,7 +1,7 @@
 #ifndef DBFILE_H
 #define DBFILE_H
 
-#include <string>
+#include <string.h>
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>

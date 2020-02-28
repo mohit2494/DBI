@@ -700,6 +700,5 @@ OrderMaker* CNF::PrepareCnfQueryOrderMaker(OrderMaker &srtorder){
         delete query;
         return NULL;
     }
-
 }
 

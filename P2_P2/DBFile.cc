@@ -2,7 +2,7 @@
 #include "Utilities.h"
 
 /*-----------------------------------------------------------------------------------*/
-//                   GENERIC DBFILE CLASS FUNCTION DEFINATION
+//                   GENERIC DBFILE CLASS FUNCTION DEFINITION
 /*-----------------------------------------------------------------------------------*/
 GenericDBFile::GenericDBFile(){
     
@@ -78,7 +78,7 @@ int GenericDBFile::Close(){}
 
 
 /*-----------------------------------------------------------------------------------*/
-//                   HEAP DBFILE CLASS FUNCTION DEFINATION
+//                   HEAP DBFILE CLASS FUNCTION DEFINITION
 /*-----------------------------------------------------------------------------------*/
 HeapDBFile :: HeapDBFile(Preference * preference){
     myPreferencePtr = preference;
@@ -276,7 +276,7 @@ int HeapDBFile :: Close () {
 
 
 /*-----------------------------------------------------------------------------------*/
-//                   SORTED DBFILE CLASS FUNCTION DEFINATION
+//                   SORTED DBFILE CLASS FUNCTION DEFINITION
 /*-----------------------------------------------------------------------------------*/
 SortedDBFile :: SortedDBFile(Preference * preference){
     myPreferencePtr = preference;
@@ -314,37 +314,34 @@ void SortedDBFile :: Add(Record &addme){
         exit(1);
     }
     
-    
     // assign new pipe instance for input pipe if null
-         if (inputPipePtr == NULL){
-              inputPipePtr = new Pipe(10);
-         }
-         if(outputPipePtr == NULL){
-             outputPipePtr = new Pipe(10);
-         }
-         if(bigQPtr == NULL){
-            bigQPtr =  new BigQ(*(inputPipePtr), *(outputPipePtr), *(myPreferencePtr->orderMaker), myPreferencePtr->runLength);
-         }
-     
-    
-     // Flush the page data from which you are reading and load the last page to start appending records.
-     if (myPreferencePtr->pageBufferMode == READ ) {
-            if( myPage.getNumRecs() > 0){
-                myPage.EmptyItOut();
-            }
-         // assign new pipe instance for input pipe if null
-         if (inputPipePtr == NULL){
-              inputPipePtr = new Pipe(10);
-         }
-         if(outputPipePtr == NULL){
-             outputPipePtr = new Pipe(10);
-         }
-         if(bigQPtr == NULL){
-            bigQPtr =  new BigQ(*(inputPipePtr), *(outputPipePtr), *(myPreferencePtr->orderMaker), myPreferencePtr->runLength);
-         }
+    if (inputPipePtr == NULL){
+        inputPipePtr = new Pipe(10);
+    }
+    if(outputPipePtr == NULL){
+        outputPipePtr = new Pipe(10);
+    }
+    if(bigQPtr == NULL){
+        bigQPtr =  new BigQ(*(inputPipePtr), *(outputPipePtr), *(myPreferencePtr->orderMaker), myPreferencePtr->runLength);
     }
     
-
+    // Flush the page data from which you are reading and load the last page to start appending records.
+    if (myPreferencePtr->pageBufferMode == READ ) {
+        if( myPage.getNumRecs() > 0){
+            myPage.EmptyItOut();
+        }
+        // assign new pipe instance for input pipe if null
+        if (inputPipePtr == NULL){
+            inputPipePtr = new Pipe(10);
+        }
+        if(outputPipePtr == NULL){
+            outputPipePtr = new Pipe(10);
+        }
+        if(bigQPtr == NULL){
+        bigQPtr =  new BigQ(*(inputPipePtr), *(outputPipePtr), *(myPreferencePtr->orderMaker), myPreferencePtr->runLength);
+        }
+    }
+    
     // set DBFile in write mode
     myPreferencePtr->pageBufferMode = WRITE;
     
@@ -376,6 +373,7 @@ void SortedDBFile :: Load(Schema &myschema, const char *loadpath){
       // set DBFile in WRITE Mode
       myPreferencePtr->pageBufferMode = WRITE;
       FILE *tableFile = fopen (loadpath, "r");
+      
       // while there are records, keep adding them to the DBFile. Reuse Add function.
       while(temp.SuckNextRecord(&myschema, tableFile)==1) {
           Add(temp);
@@ -422,6 +420,7 @@ int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
         
         // read the current page for simplicity.
         off_t startPage = !myPreferencePtr->currentPage?0:myPreferencePtr->currentPage-1;
+        
         // loop till the current page is fully read and checked record by record. Once the current page changes or the file ends break from the loop
         while(GetNext(fetchme)){
             if (startPage != myPreferencePtr->currentPage-1){
@@ -577,6 +576,7 @@ void SortedDBFile::MergeSortedInputWithFile(){
     // page counts;
     int totalPages = myFile.GetLength()-1;
     int currentPage = 0;
+    
     // set flags to initiate merge
     bool fileReadFlag = true;
     bool outputPipeReadFlag = true;
@@ -752,7 +752,7 @@ int SortedDBFile::BinarySearch(Record &fetchme, Record &literal,off_t low, off_t
 
 
 /*-----------------------------------------------------------------------------------*/
-//                   DBFILE CLASS FUNCTION DEFINATION
+//                   DBFILE CLASS FUNCTION DEFINITION
 /*-----------------------------------------------------------------------------------*/
 
 DBFile::DBFile () {
