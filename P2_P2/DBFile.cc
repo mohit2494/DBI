@@ -316,35 +316,34 @@ void SortedDBFile :: Add(Record &addme){
     
     
     // assign new pipe instance for input pipe if null
-         if (inputPipePtr == NULL){
-              inputPipePtr = new Pipe(10);
-         }
-         if(outputPipePtr == NULL){
-             outputPipePtr = new Pipe(10);
-         }
-         if(bigQPtr == NULL){
-            bigQPtr =  new BigQ(*(inputPipePtr), *(outputPipePtr), *(myPreferencePtr->orderMaker), myPreferencePtr->runLength);
-         }
-     
+    if (inputPipePtr == NULL){
+        inputPipePtr = new Pipe(10);
+    }
+    if(outputPipePtr == NULL){
+        outputPipePtr = new Pipe(10);
+    }
+    if(bigQPtr == NULL){
+        bigQPtr =  new BigQ(*(inputPipePtr), *(outputPipePtr), *(myPreferencePtr->orderMaker), myPreferencePtr->runLength);
+    }
+
     
      // Flush the page data from which you are reading and load the last page to start appending records.
      if (myPreferencePtr->pageBufferMode == READ ) {
-            if( myPage.getNumRecs() > 0){
-                myPage.EmptyItOut();
-            }
-         // assign new pipe instance for input pipe if null
-         if (inputPipePtr == NULL){
-              inputPipePtr = new Pipe(10);
-         }
-         if(outputPipePtr == NULL){
-             outputPipePtr = new Pipe(10);
-         }
-         if(bigQPtr == NULL){
+        if( myPage.getNumRecs() > 0){
+            myPage.EmptyItOut();
+        }
+        // assign new pipe instance for input pipe if null
+        if (inputPipePtr == NULL){
+            inputPipePtr = new Pipe(10);
+        }
+        if(outputPipePtr == NULL){
+            outputPipePtr = new Pipe(10);
+        }
+        if(bigQPtr == NULL){
             bigQPtr =  new BigQ(*(inputPipePtr), *(outputPipePtr), *(myPreferencePtr->orderMaker), myPreferencePtr->runLength);
-         }
+        }
     }
     
-
     // set DBFile in write mode
     myPreferencePtr->pageBufferMode = WRITE;
     
@@ -466,7 +465,6 @@ int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
                     doBinarySearch = false;
                     if (retstatus == 1){
                         if(myCompEng.Compare(&fetchme, &literal, &cnf))
-//                            cout<<"GetNext Return 1 from - 2 "<<myPreferencePtr->currentPage<<endl;
                             return 1;
                     }
 
@@ -740,7 +738,6 @@ int SortedDBFile::BinarySearch(Record &fetchme, Record &literal,off_t low, off_t
            //with literal >key)then there is no record matching so return 0;
            if (comparisonResult > 0){
                 while(myPage.GetFirst(&fetchme)){
-                    fetchme.Print(new Schema("catalog","customer"));
                     int comparisonResultInsidePage = myCompEng.Compare(&literal, queryOrderMaker,&fetchme, myPreferencePtr->orderMaker);
                     if(comparisonResultInsidePage<0){
                         cout<<"return 0"<<endl;
