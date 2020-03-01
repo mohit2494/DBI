@@ -615,7 +615,7 @@ void CNF :: GrowFromParseTree (struct AndList *parseTree, Schema *mySchema,
 
 
 
-int CNF::GetCNFSortOrders(OrderMaker& left, OrderMaker& right)
+int CNF::GetSortOrdersCopy(OrderMaker& left, OrderMaker& right)
 {
       // initialize the size of the OrderMakers
         left.numAtts = 0;
@@ -670,27 +670,27 @@ int CNF::GetCNFSortOrders(OrderMaker& left, OrderMaker& right)
         return left.numAtts;
 }
 
-OrderMaker* CNF::PrepareCnfQueryOrderMaker(OrderMaker &srtorder){
+OrderMaker* CNF::GetQueryOrderMaker(OrderMaker &sortOrderMaker){
 
-    OrderMaker cnf_order;
-    OrderMaker sortOrderCopy = srtorder;
-    GetCNFSortOrders(cnf_order, sortOrderCopy);
+    OrderMaker cnfOrderMaker;
+    OrderMaker sortOrderCopy = sortOrderMaker;
+    GetSortOrdersCopy(cnfOrderMaker, sortOrderCopy);
     OrderMaker *query = new OrderMaker();
-    for (int i = 0; i < srtorder.numAtts; i++)
+    for (int i = 0; i < sortOrderMaker.numAtts; i++)
     {
-        bool matched = false;
-        for(int j = 0; j < cnf_order.numAtts; j++)
+        bool flag = false;
+        for(int j = 0; j < cnfOrderMaker.numAtts; j++)
         {
-            if((srtorder.whichAtts[i] == cnf_order.whichAtts[j]) && (srtorder.whichTypes[i] == cnf_order.whichTypes[j]))
+            if((sortOrderMaker.whichAtts[i] == cnfOrderMaker.whichAtts[j]) && (sortOrderMaker.whichTypes[i] == cnfOrderMaker.whichTypes[j]))
             {
-                matched = true;
-                query->whichAtts[query->numAtts] = sortOrderCopy.whichAtts[j];  //number your atts accordingly as we are appending
+                flag = true;
+                query->whichAtts[query->numAtts] = sortOrderCopy.whichAtts[j];
                 query->whichTypes[query->numAtts] = sortOrderCopy.whichTypes[j];
                 query->numAtts++;
                 break;
             }
         }
-        if(!matched)
+        if(!flag)
             break;
     }
     if(query->numAtts > 0)

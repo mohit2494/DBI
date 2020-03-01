@@ -418,12 +418,7 @@ int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
         
         // set page mode to READ
         myPreferencePtr->pageBufferMode = READ;
-//        while(GetNext(fetchme)){
-//                   if(myCompEng.Compare(&fetchme, &literal, &cnf)){
-//                       cout<<"GetNext Return 1 from - 1"<<myPreferencePtr->currentPage<<endl;
-//                       return 1;
-//                   }
-//        }
+
 
         if(doBinarySearch){
             // read the current page for simplicity.
@@ -434,22 +429,19 @@ int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
                     break;
                 }
                 if(myCompEng.Compare(&fetchme, &literal, &cnf)){
-                    //cout<<"GetNext Return 1 from - 1"<<myPreferencePtr->currentPage<<endl;
                     return 1;
                 }
             }
             // has the value of the next page{
             if(myPreferencePtr->currentPage == myFile.GetLength()-1){
                 startPage = myPreferencePtr->currentPage;
-                //cout<<myPreferencePtr->currentPage<<startPage;
             }
             else{
                 startPage= (myPreferencePtr->currentPage-1);
-                //cout<<myPreferencePtr->currentPage<<startPage;
             }
             
             // fetch the queryOrderMaker using the cnf given and the sort ordermaker stored in the preference.
-            queryOrderMaker= cnf.PrepareCnfQueryOrderMaker(*myPreferencePtr->orderMaker);
+            queryOrderMaker= cnf.GetQueryOrderMaker(*myPreferencePtr->orderMaker);
 
             // if the queryOrderMaker is available do a binary search to find the first matching record which is equal to literal using queryOrderMaker.
             if(queryOrderMaker!=NULL){
@@ -485,12 +477,10 @@ int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
             {
                 myFile.GetPage(&prevPage,previousPage);
                 prevPage.GetFirst(&fetchme);
-//                fetchme.Print(new Schema("catalog","customer"));
                 
                 if(myCompEng.Compare(&literal, queryOrderMaker, &fetchme, myPreferencePtr->orderMaker)==0)
                 {
                     previousPage--;
-//                    cout<<"Moving Backwards looking for first match"<<previousPage<<endl;
                 }
                 else
                 {
@@ -503,7 +493,6 @@ int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
                             prevPage.ToBinary (bits);
                             myPage.FromBinary(bits);
                             myPreferencePtr->currentPage = previousPage+1;
-//                            cout<<"GetNext Return 1 from - 3"<<myPreferencePtr->currentPage<<endl;
                             return 1;
                         }
                     }
@@ -527,14 +516,11 @@ int SortedDBFile :: GetNext(Record &fetchme, CNF &cnf, Record &literal){
         {
             // if queryOrderMaker exists and the literal is smaller than the fetched record stop the seach as all other records are greter incase of the search.
             if (queryOrderMaker!=NULL && myCompEng.Compare(&literal,queryOrderMaker,&fetchme, myPreferencePtr->orderMaker) < 0){
-//                fetchme.Print(new Schema("catalog","customer"));
-//                cout<<"GetNext Return 0 from"<<myPreferencePtr->currentPage<<endl;
                 return 0;
             }
             // if the record passes the CNF compare return.
             if(myCompEng.Compare (&fetchme, &literal, &cnf))
             {
-//                cout<<"GetNext Return 1 from"<<myPreferencePtr->currentPage<<endl;
                 return 1;
             }
         }
@@ -720,34 +706,23 @@ int SortedDBFile::BinarySearch(Record &fetchme, Record &literal,off_t low, off_t
            else
                   myFile.GetPage(&myPage,0);
            myPage.GetFirst(&fetchme);
-           fetchme.Print(new Schema("catalog","customer"));
            int comparisonResult = myCompEng.Compare(&literal, queryOrderMaker, &fetchme, myPreferencePtr->orderMaker);
 
-           // Executing search based on the result.
            if (comparisonResult == 0 ){
-               myPreferencePtr->currentPage = mid+13;
+               myPreferencePtr->currentPage = mid+1;
                return 2;
            }
            else if (comparisonResult<0){
                high = mid - 1;
            }
-           //if literal is greater than the first record in the page search for the bottom half.
-           //scan the entire page for the possible match
-           // -- if u reach the end of page.. search for the bottom half.
-           //-- if in a page u reached a place where value of literal < the key(where u have started
-           //with literal >key)then there is no record matching so return 0;
            if (comparisonResult > 0){
                 while(myPage.GetFirst(&fetchme)){
                     int comparisonResultInsidePage = myCompEng.Compare(&literal, queryOrderMaker,&fetchme, myPreferencePtr->orderMaker);
                     if(comparisonResultInsidePage<0){
-                        cout<<"return 0"<<endl;
-                        cout<<myPage.getNumRecs()<<endl;
                         return 0;
                     }
                     else if(comparisonResultInsidePage == 0 ){
                         myPreferencePtr->currentPage = mid+1;
-                        cout<<"return 1"<<endl;
-                        cout<<myPage.getNumRecs()<<endl;
                         return 1;
                     }
                 }

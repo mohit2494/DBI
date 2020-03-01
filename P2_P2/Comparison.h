@@ -84,7 +84,7 @@ public:
 	// only if it is impossible to determine an acceptable ordering
 	// for the given comparison
 	int GetSortOrders (OrderMaker &left, OrderMaker &right);
-    int GetCNFSortOrders (OrderMaker &left, OrderMaker &right);
+    int GetSortOrdersCopy (OrderMaker &left, OrderMaker &right);
 
 	// print the comparison structure to the screen
 	void Print ();
@@ -100,7 +100,7 @@ public:
     void GrowFromParseTree (struct AndList *parseTree, Schema *mySchema,
     Record &literal);
     
-    OrderMaker* PrepareCnfQueryOrderMaker(OrderMaker &srtorder);
+    OrderMaker* GetQueryOrderMaker(OrderMaker &srtorder);
 
 
 };
